@@ -360,16 +360,19 @@ export class CloneService {
   private async fetchHtml(url: string): Promise<string> {
     // List of CORS proxies to try in order
     const corsProxies = [
-      `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-      `https://corsproxy.io/?${encodeURIComponent(url)}`,
-      `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+      { url: `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`, name: 'AllOrigins' },
+      { url: `https://corsproxy.io/?${encodeURIComponent(url)}`, name: 'CorsProxy.io' },
+      { url: `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`, name: 'CodeTabs' },
+      { url: `https://thingproxy.freeboard.io/fetch/${encodeURIComponent(url)}`, name: 'ThingProxy' },
+      { url: url, name: 'Direct (no proxy)' }, // Last resort - direct fetch
     ];
 
     let lastError: Error | null = null;
 
     for (let i = 0; i < corsProxies.length; i++) {
-      const proxyUrl = corsProxies[i];
-      const proxyName = proxyUrl.split('/')[2]; // Extract domain name
+      const proxy = corsProxies[i];
+      const proxyUrl = proxy.url;
+      const proxyName = proxy.name;
 
       try {
         console.log(`fetchHtml: Attempting proxy ${i + 1}/${corsProxies.length} (${proxyName})`);
