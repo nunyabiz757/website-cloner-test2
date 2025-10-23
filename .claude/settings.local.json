@@ -1,0 +1,37 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm install)",
+      "Bash(npm install:*)",
+      "Bash(if [ -d \"src/server\" ])",
+      "Bash(then)",
+      "Bash(else)",
+      "Bash(fi)",
+      "Bash([ -f \"src/lib/supabase.ts\" ])",
+      "Bash([ -f \"src/contexts/AuthContext.tsx\" ])",
+      "Bash([ -d \"src/stores\" ])",
+      "Bash([ -f \"src/stores/projectStore.ts\" ])",
+      "Bash(for file in \"src/utils/security/validator.ts\" \"src/utils/security/sanitizer.ts\" \"src/utils/security/rateLimiter.ts\" \"src/utils/security/fingerprint.ts\" \"src/utils/security/imageSecurity.ts\")",
+      "Bash(do )",
+      "Bash(if [ -f \"$file\" ])",
+      "Bash(echo:*)",
+      "Bash(done)",
+      "Bash(for file in \"src/services/SecurityLogger.ts\" \"src/services/SecureStorageService.ts\" \"src/hooks/useSecureStorage.ts\" \"src/hooks/useRateLimit.ts\")",
+      "Bash(for file in \"src/services/CloneService.ts\" \"src/services/OptimizationService.ts\" \"src/services/ExportService.ts\" \"src/services/BrowserCompatService.ts\" \"src/services/AnalyticsService.ts\")",
+      "Bash(for file in \"src/utils/minifiers/jsMinifier.ts\" \"src/utils/minifiers/cssMinifier.ts\" \"src/utils/minifiers/htmlMinifier.ts\")",
+      "Bash(for file in \"src/utils/analyzers/cssAnalyzer.ts\" \"src/utils/analyzers/jsAnalyzer.ts\")",
+      "Bash(for file in \"src/services/wordpress/WordPressExportService.ts\" \"src/services/wordpress/ComponentToWordPressConverter.ts\" \"src/services/wordpress/ThemeGenerator.ts\" \"src/services/wordpress/PluginGenerator.ts\" \"src/services/wordpress/PageConverter.ts\")",
+      "Bash(for builder in \"elementor\" \"beaverbuilder\" \"divi\" \"wpbakery\" \"oxygen\" \"bricks\" \"generateblocks\" \"kadence\" \"spectra\" \"brizy\" \"zion\")",
+      "Bash(file=\"src/services/wordpress/builders/$builderBuilder.ts\")",
+      "Bash(for file in \"src/services/componentDetection/ComponentDetector.ts\" \"src/services/componentDetection/PatternMatcher.ts\" \"src/services/componentDetection/StructureAnalyzer.ts\" \"src/services/componentDetection/SemanticAnalyzer.ts\")",
+      "Bash(for file in \"src/components/ui/Button.tsx\" \"src/components/ui/Card.tsx\" \"src/components/ui/Input.tsx\" \"src/components/ui/Select.tsx\" \"src/components/ui/Badge.tsx\" \"src/components/ui/Alert.tsx\")",
+      "Bash(for:*)",
+      "Bash(git init:*)",
+      "Bash(git add:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
