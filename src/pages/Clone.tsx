@@ -52,8 +52,34 @@ export function Clone() {
     setLogs([]);
     setCurrentStep('Initializing...');
     addLog('Starting clone process...');
+    addLog(`Target URL: ${url}`);
 
     const startTime = Date.now();
+
+    // Intercept console.log to capture service logs
+    const originalConsoleLog = console.log;
+    const originalConsoleError = console.error;
+    const originalConsoleWarn = console.warn;
+
+    console.log = (...args) => {
+      originalConsoleLog(...args);
+      const message = args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : String(arg)).join(' ');
+      if (message.includes('startAnalysis') || message.includes('CloneService')) {
+        addLog(`[Service] ${message}`);
+      }
+    };
+
+    console.error = (...args) => {
+      originalConsoleError(...args);
+      const message = args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : String(arg)).join(' ');
+      addLog(`[ERROR] ${message}`);
+    };
+
+    console.warn = (...args) => {
+      originalConsoleWarn(...args);
+      const message = args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : String(arg)).join(' ');
+      addLog(`[WARNING] ${message}`);
+    };
 
     try {
       const cloneService = new CloneService();
@@ -78,6 +104,15 @@ export function Clone() {
       setProgress(90);
       setCurrentStep('Saving project...');
       addLog('Saving project...');
+
+      // Log HTML size for debugging
+      const htmlSize = result.originalHtml ? new Blob([result.originalHtml]).size : 0;
+      addLog(`HTML size: ${htmlSize} bytes (${(htmlSize / 1024).toFixed(2)} KB)`);
+
+      if (htmlSize === 0) {
+        addLog('WARNING: HTML size is 0 bytes - clone may have failed');
+        console.warn('Clone result has empty HTML:', result);
+      }
 
       // Save to store
       addProject({
@@ -110,6 +145,11 @@ export function Clone() {
       addLog(`Error: ${err.message}`);
       setLoading(false);
       // Stay on progress phase to show error in logs
+    } finally {
+      // Restore original console methods
+      console.log = originalConsoleLog;
+      console.error = originalConsoleError;
+      console.warn = originalConsoleWarn;
     }
   };
 
@@ -268,6 +308,7 @@ export function Clone() {
               onDownload={handleDownload}
               onExportToWordPress={handleExportToWordPress}
               stats={calculateStats()}
+              logs={logs}
             />
 
             {/* Back to Dashboard Button */}
