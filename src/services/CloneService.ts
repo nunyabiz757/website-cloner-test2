@@ -358,31 +358,73 @@ export class CloneService {
   }
 
   private async fetchHtml(url: string): Promise<string> {
-    try {
-      loggingService.debug('clone', `Fetching HTML from ${url}`);
+    // List of CORS proxies to try in order
+    const corsProxies = [
+      `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+      `https://corsproxy.io/?${encodeURIComponent(url)}`,
+      `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+    ];
 
-      const corsProxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+    let lastError: Error | null = null;
 
-      const response = await fetch(corsProxyUrl);
-      if (!response.ok) {
-        loggingService.error('clone', `HTTP error fetching ${url}`, {
-          status: response.status,
+    for (let i = 0; i < corsProxies.length; i++) {
+      const proxyUrl = corsProxies[i];
+      const proxyName = proxyUrl.split('/')[2]; // Extract domain name
+
+      try {
+        console.log(`fetchHtml: Attempting proxy ${i + 1}/${corsProxies.length} (${proxyName})`);
+        loggingService.debug('clone', `Fetching HTML from ${url} via ${proxyName}`);
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+
+        const response = await fetch(proxyUrl, {
+          signal: controller.signal,
+          headers: {
+            'User-Agent': this.userAgent,
+          },
         });
-        throw new Error(`HTTP error! status: ${response.status}`);
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          console.log(`fetchHtml: Proxy ${proxyName} returned status ${response.status}`);
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const html = await response.text();
+
+        if (!html || html.length < 100) {
+          console.log(`fetchHtml: Proxy ${proxyName} returned insufficient data (${html.length} bytes)`);
+          throw new Error('Response too small, likely empty');
+        }
+
+        console.log(`fetchHtml: Success with ${proxyName} - ${html.length} bytes fetched`);
+        loggingService.debug('clone', `Successfully fetched HTML from ${url} via ${proxyName}`, {
+          size: html.length,
+        });
+        return html;
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error('Unknown error');
+        console.log(`fetchHtml: Proxy ${proxyName} failed:`, lastError.message);
+
+        // If this isn't the last proxy, continue to the next one
+        if (i < corsProxies.length - 1) {
+          console.log(`fetchHtml: Trying next proxy...`);
+          continue;
+        }
       }
-      const html = await response.text();
-      loggingService.debug('clone', `Successfully fetched HTML from ${url}`, {
-        size: html.length,
-      });
-      return html;
-    } catch (error) {
-      loggingService.error('clone', `Failed to fetch URL: ${url}`, {
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
-      throw new Error(
-        `Failed to fetch URL: ${error instanceof Error ? error.message : 'Unknown error'}`
-      );
     }
+
+    // All proxies failed
+    const errorMsg = `All CORS proxies failed. Last error: ${lastError?.message || 'Unknown'}`;
+    console.error('fetchHtml: All proxies exhausted');
+    loggingService.error('clone', `Failed to fetch URL after trying all proxies: ${url}`, {
+      error: lastError?.message,
+      proxiesAttempted: corsProxies.length,
+    });
+
+    throw new Error(errorMsg);
   }
 
   private parseHtml(html: string, baseUrl: string): ParsedHTML {
