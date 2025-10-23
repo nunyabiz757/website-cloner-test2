@@ -11,6 +11,7 @@ export interface ClonePreviewProps {
     imagesCount: number;
     linksCount: number;
   };
+  logs?: string[];
 }
 
 export function ClonePreview({
@@ -18,9 +19,11 @@ export function ClonePreview({
   clonedHtml,
   onDownload,
   onExportToWordPress,
-  stats
+  stats,
+  logs = []
 }: ClonePreviewProps) {
   const [viewMode, setViewMode] = useState<'split' | 'original' | 'cloned'>('split');
+  const [showLogs, setShowLogs] = useState(false);
 
   const formatSize = (bytes: number): string => {
     if (bytes < 1024) return `${bytes} B`;
@@ -87,8 +90,48 @@ export function ClonePreview({
             </svg>
             Export to WordPress
           </Button>
+          <Button onClick={() => setShowLogs(!showLogs)} variant="outline">
+            <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            {showLogs ? 'Hide Logs' : 'View Logs'}
+          </Button>
         </div>
       </div>
+
+      {/* Logs Panel (Expandable) */}
+      {showLogs && (
+        <div className="border border-gray-200 rounded-lg overflow-hidden">
+          <div className="bg-gray-800 px-4 py-2 text-white text-sm font-medium flex items-center justify-between">
+            <span>Clone Process Logs</span>
+            <span className="text-xs text-gray-400">{logs.length} entries</span>
+          </div>
+          <div className="bg-gray-900 p-4 max-h-64 overflow-y-auto">
+            {logs.length === 0 ? (
+              <p className="text-gray-500 text-sm">No logs available</p>
+            ) : (
+              <div className="space-y-1 font-mono text-xs">
+                {logs.map((log, index) => (
+                  <div
+                    key={index}
+                    className={`${
+                      log.toLowerCase().includes('error')
+                        ? 'text-red-400'
+                        : log.toLowerCase().includes('warning')
+                        ? 'text-yellow-400'
+                        : log.toLowerCase().includes('completed') || log.toLowerCase().includes('success')
+                        ? 'text-green-400'
+                        : 'text-gray-300'
+                    }`}
+                  >
+                    {log}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* View Mode Selector */}
       <div>
