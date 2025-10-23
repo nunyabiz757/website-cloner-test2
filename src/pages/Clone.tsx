@@ -24,7 +24,7 @@ interface CloneResult {
 
 export function Clone() {
   const navigate = useNavigate();
-  const { createProject } = useProjectStore();
+  const { addProject } = useProjectStore();
 
   const [phase, setPhase] = useState<Phase>('form');
   const [loading, setLoading] = useState(false);
@@ -80,7 +80,7 @@ export function Clone() {
       addLog('Saving project...');
 
       // Save to store
-      await createProject({
+      addProject({
         name: result.metadata?.title || new URL(url).hostname,
         url: url,
         html: result.originalHtml || '',
