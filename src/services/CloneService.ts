@@ -102,7 +102,7 @@ export class CloneService {
       loggingService.info('clone', `Detected framework: ${metadata.framework}`, { projectId });
 
       console.log('startAnalysis: Step 4 - Detecting page builder components');
-      project.progress = 60;
+      project.progress = 40;
       project.currentStep = 'Detecting page builder components';
 
       const detector = new ComponentDetector();
@@ -119,7 +119,44 @@ export class CloneService {
         componentsCount: detection.components.length
       });
 
-      console.log('startAnalysis: Step 5 - Analyzing performance');
+      // Download assets if requested
+      if (options.includeAssets !== false) {
+        console.log('startAnalysis: Step 5 - Downloading CSS');
+        project.progress = 50;
+        project.currentStep = 'Downloading CSS files';
+
+        const cssAssets = await this.extractAndDownloadCSS(parsedData, options.source);
+
+        console.log('startAnalysis: Step 6 - Downloading images');
+        project.progress = 60;
+        project.currentStep = 'Downloading images';
+
+        const imageAssets = await this.extractAndDownloadImages(parsedData, options.source);
+
+        console.log('startAnalysis: Step 7 - Downloading fonts');
+        project.progress = 65;
+        project.currentStep = 'Downloading fonts';
+
+        const fontAssets = await this.extractAndDownloadFonts(parsedData, options.source);
+
+        const allAssets = [...cssAssets, ...imageAssets, ...fontAssets];
+        project.assets = allAssets;
+
+        console.log(`startAnalysis: Downloaded ${allAssets.length} assets`);
+        loggingService.info('clone', `Downloaded ${allAssets.length} assets`, { projectId });
+
+        console.log('startAnalysis: Step 8 - Embedding assets in HTML');
+        project.progress = 70;
+        project.currentStep = 'Embedding assets in HTML';
+
+        const rewrittenHtml = this.rewriteHtmlWithLocalPaths(html, allAssets);
+        project.originalHtml = rewrittenHtml;
+
+        metadata.totalSize = this.calculateTotalSize(allAssets);
+        metadata.assetCount = allAssets.length;
+      }
+
+      console.log('startAnalysis: Step 9 - Analyzing performance');
       project.progress = 75;
       project.currentStep = 'Analyzing performance metrics';
 
@@ -128,7 +165,7 @@ export class CloneService {
       project.metrics = metrics;
       console.log('startAnalysis: Performance analyzed, score:', metrics.score);
 
-      console.log('startAnalysis: Step 6 - Running Lighthouse audit');
+      console.log('startAnalysis: Step 10 - Running Lighthouse audit');
       project.progress = 90;
       project.currentStep = 'Running Lighthouse audit';
 
@@ -150,7 +187,7 @@ export class CloneService {
         });
       }
 
-      console.log('startAnalysis: Step 7 - Saving project');
+      console.log('startAnalysis: Step 11 - Saving project');
       project.progress = 100;
       project.currentStep = 'Analysis completed';
       project.status = 'completed';
