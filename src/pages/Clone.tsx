@@ -87,6 +87,7 @@ export function Clone() {
       const result = await cloneService.cloneWebsite({
         source: url,
         type: 'url',
+        includeAssets: true, // Enable asset downloading
         onProgress: (p, step) => {
           setProgress(p);
           setCurrentStep(step);

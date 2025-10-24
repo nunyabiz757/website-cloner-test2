@@ -120,29 +120,36 @@ export class CloneService {
       });
 
       // Download assets if requested
+      console.log('startAnalysis: Checking includeAssets option:', options.includeAssets);
       if (options.includeAssets !== false) {
-        console.log('startAnalysis: Step 5 - Downloading CSS');
+        console.log('startAnalysis: Step 5 - Downloading CSS (includeAssets is enabled)');
         project.progress = 50;
         project.currentStep = 'Downloading CSS files';
 
+        console.log('startAnalysis: Found', parsedData.stylesheets.length, 'stylesheets and', parsedData.inlineStyles.length, 'inline styles');
         const cssAssets = await this.extractAndDownloadCSS(parsedData, options.source);
+        console.log('startAnalysis: Downloaded', cssAssets.length, 'CSS assets');
 
         console.log('startAnalysis: Step 6 - Downloading images');
         project.progress = 60;
         project.currentStep = 'Downloading images';
 
+        console.log('startAnalysis: Found', parsedData.images.length, 'images and', parsedData.backgroundImages.length, 'background images');
         const imageAssets = await this.extractAndDownloadImages(parsedData, options.source);
+        console.log('startAnalysis: Downloaded', imageAssets.length, 'image assets');
 
         console.log('startAnalysis: Step 7 - Downloading fonts');
         project.progress = 65;
         project.currentStep = 'Downloading fonts';
 
+        console.log('startAnalysis: Found', parsedData.fonts.length, 'fonts');
         const fontAssets = await this.extractAndDownloadFonts(parsedData, options.source);
+        console.log('startAnalysis: Downloaded', fontAssets.length, 'font assets');
 
         const allAssets = [...cssAssets, ...imageAssets, ...fontAssets];
         project.assets = allAssets;
 
-        console.log(`startAnalysis: Downloaded ${allAssets.length} assets`);
+        console.log(`startAnalysis: Total assets downloaded: ${allAssets.length} (${cssAssets.length} CSS, ${imageAssets.length} images, ${fontAssets.length} fonts)`);
         loggingService.info('clone', `Downloaded ${allAssets.length} assets`, { projectId });
 
         console.log('startAnalysis: Step 8 - Embedding assets in HTML');
@@ -151,9 +158,13 @@ export class CloneService {
 
         const rewrittenHtml = this.rewriteHtmlWithLocalPaths(html, allAssets);
         project.originalHtml = rewrittenHtml;
+        console.log('startAnalysis: HTML rewritten, new size:', new Blob([rewrittenHtml]).size, 'bytes');
 
         metadata.totalSize = this.calculateTotalSize(allAssets);
         metadata.assetCount = allAssets.length;
+        console.log('startAnalysis: Metadata updated - total size:', metadata.totalSize, 'bytes, asset count:', metadata.assetCount);
+      } else {
+        console.log('startAnalysis: Asset downloading SKIPPED (includeAssets is false)');
       }
 
       console.log('startAnalysis: Step 9 - Analyzing performance');
