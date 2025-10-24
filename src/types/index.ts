@@ -7,6 +7,7 @@ export interface CloneOptions {
   includeAssets?: boolean;
   useBrowserAutomation?: boolean; // Enable Playwright for dynamic content
   captureResponsive?: boolean; // Enable responsive breakpoint detection (Phase 2)
+  captureInteractive?: boolean; // Enable interactive state detection (Phase 3)
   onProgress?: (progress: number, step: string) => void;
 }
 
@@ -56,6 +57,13 @@ export interface WebsiteMetadata {
     breakpoints: number;
     mediaQueries: number;
     responsivePercentage: number;
+  };
+  interactiveData?: {
+    totalInteractive: number;
+    withHover: number;
+    withFocus: number;
+    withActive: number;
+    withPseudoElements: number;
   };
 }
 

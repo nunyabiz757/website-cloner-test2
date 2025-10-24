@@ -115,6 +115,29 @@ export class CloneService {
           }
 
           console.log(`Responsive capture complete: ${responsiveCaptureResult.responsiveStyles.length} breakpoints, ${responsiveCaptureResult.mediaQueries.length} media queries`);
+        } else if (options.captureInteractive) {
+          // Use interactive capture if enabled (Phase 3)
+          console.log('startAnalysis: Interactive capture ENABLED');
+          project.currentStep = 'Capturing interactive states';
+          options.onProgress?.(15, 'Capturing interactive states');
+
+          const interactiveCaptureResult = await browserService.captureInteractiveStates(options.source);
+          html = interactiveCaptureResult.html;
+
+          // Store interactive data in project metadata
+          if (project.metadata) {
+            project.metadata.interactiveData = {
+              totalInteractive: interactiveCaptureResult.totalInteractive,
+              withHover: interactiveCaptureResult.statesDetected.hover,
+              withFocus: interactiveCaptureResult.statesDetected.focus,
+              withActive: interactiveCaptureResult.statesDetected.active,
+              withPseudoElements: interactiveCaptureResult.interactiveElements.filter(
+                e => e.pseudoElements.before || e.pseudoElements.after
+              ).length,
+            };
+          }
+
+          console.log(`Interactive capture complete: ${interactiveCaptureResult.totalInteractive} total, ${interactiveCaptureResult.statesDetected.hover} with hover`);
         } else {
           const captureResult = await browserService.capturePage(options.source);
           html = captureResult.html;

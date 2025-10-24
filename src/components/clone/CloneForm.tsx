@@ -14,6 +14,7 @@ export interface CloneOptions {
   exportToWordPress: boolean;
   useBrowserAutomation: boolean;
   captureResponsive: boolean;
+  captureInteractive: boolean;
 }
 
 interface CloneFormProps {
@@ -36,6 +37,7 @@ export function CloneForm({ onSubmit, isLoading = false }: CloneFormProps) {
     exportToWordPress: false,
     useBrowserAutomation: false,
     captureResponsive: true,
+    captureInteractive: true,
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -69,6 +71,12 @@ export function CloneForm({ onSubmit, isLoading = false }: CloneFormProps) {
       label: '📱 Responsive Detection (Phase 2)',
       description: 'Capture mobile, tablet & desktop breakpoints with media queries (+2-3 seconds)',
       className: 'bg-purple-50 hover:bg-purple-100 border-2 border-purple-300',
+    },
+    {
+      key: 'captureInteractive' as keyof CloneOptions,
+      label: '🎨 Interactive States (Phase 3)',
+      description: 'Capture hover, focus, active effects and pseudo-elements (+1-2 seconds)',
+      className: 'bg-orange-50 hover:bg-orange-100 border-2 border-orange-300',
     },
     {
       key: 'optimizeImages' as keyof CloneOptions,
