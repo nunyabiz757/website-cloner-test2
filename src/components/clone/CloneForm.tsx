@@ -12,6 +12,7 @@ export interface CloneOptions {
   lazyLoadImages: boolean;
   generateSitemap: boolean;
   exportToWordPress: boolean;
+  useBrowserAutomation: boolean;
 }
 
 interface CloneFormProps {
@@ -32,6 +33,7 @@ export function CloneForm({ onSubmit, isLoading = false }: CloneFormProps) {
     lazyLoadImages: true,
     generateSitemap: false,
     exportToWordPress: false,
+    useBrowserAutomation: false,
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -54,6 +56,12 @@ export function CloneForm({ onSubmit, isLoading = false }: CloneFormProps) {
   };
 
   const optionsConfig = [
+    {
+      key: 'useBrowserAutomation' as keyof CloneOptions,
+      label: '🚀 Browser Automation (Recommended)',
+      description: 'Use Playwright to clone React/Vue/Angular apps with JavaScript execution',
+      className: 'bg-green-50 hover:bg-green-100 border-2 border-green-300',
+    },
     {
       key: 'optimizeImages' as keyof CloneOptions,
       label: 'Optimize Images',

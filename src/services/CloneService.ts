@@ -8,6 +8,7 @@ import { sanitizeHTML } from '../utils/security/sanitizer';
 import { cloneLimiter } from '../utils/security/rateLimiter';
 import { securityLogger } from './SecurityLogger';
 import { ComponentDetector } from './detection/ComponentDetector';
+import { BrowserService } from './BrowserService';
 
 export class CloneService {
   private projects: Map<string, CloneProject> = new Map();
@@ -75,13 +76,51 @@ export class CloneService {
   }
 
   private async startAnalysis(projectId: string, options: CloneOptions, project: CloneProject): Promise<void> {
-    try {
-      console.log('startAnalysis: Step 1 - Fetching HTML');
-      project.progress = 10;
-      project.currentStep = 'Fetching HTML';
+    let browserService: BrowserService | null = null;
 
-      const html = await this.fetchHtml(options.source);
-      console.log('startAnalysis: HTML fetched, length:', html.length);
+    try {
+      let html: string;
+
+      // Use browser automation if enabled (for dynamic content like React/Vue)
+      if (options.useBrowserAutomation) {
+        console.log('startAnalysis: Browser automation ENABLED - launching browser');
+        project.progress = 5;
+        project.currentStep = 'Launching browser';
+        options.onProgress?.(5, 'Launching browser');
+
+        browserService = new BrowserService();
+        await browserService.launch({ headless: true });
+
+        console.log('startAnalysis: Step 1 - Capturing page with browser automation');
+        project.progress = 10;
+        project.currentStep = 'Loading website in browser';
+        options.onProgress?.(10, 'Loading website in browser');
+
+        const captureResult = await browserService.capturePage(options.source);
+        html = captureResult.html;
+        console.log('startAnalysis: Browser capture complete - HTML length:', html.length);
+        console.log('startAnalysis: Resources captured:', {
+          images: captureResult.resources.images.length,
+          fonts: captureResult.resources.fonts.length,
+          stylesheets: captureResult.resources.stylesheets.length,
+        });
+
+        // Store additional CSS captured by browser
+        if (captureResult.styles) {
+          console.log('startAnalysis: Browser captured additional CSS:', captureResult.styles.length, 'chars');
+        }
+      } else {
+        // Standard static HTML fetch (existing behavior)
+        console.log('startAnalysis: Browser automation DISABLED - using standard fetch');
+        console.log('startAnalysis: Step 1 - Fetching HTML');
+        project.progress = 10;
+        project.currentStep = 'Fetching HTML';
+        options.onProgress?.(10, 'Fetching HTML');
+
+        html = await this.fetchHtml(options.source);
+        console.log('startAnalysis: HTML fetched, length:', html.length);
+      }
+
       project.originalHtml = html;
 
       console.log('startAnalysis: Step 2 - Parsing HTML');
@@ -221,6 +260,12 @@ export class CloneService {
         error: error instanceof Error ? error.message : 'Unknown error',
       });
       throw error;
+    } finally {
+      // Always close browser if it was launched (prevent memory leaks)
+      if (browserService) {
+        console.log('startAnalysis: Closing browser instance');
+        await browserService.close();
+      }
     }
   }
 

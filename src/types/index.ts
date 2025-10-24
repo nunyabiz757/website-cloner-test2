@@ -5,6 +5,8 @@ export interface CloneOptions {
   followLinks?: boolean;
   respectRobots?: boolean;
   includeAssets?: boolean;
+  useBrowserAutomation?: boolean; // Enable Playwright for dynamic content
+  onProgress?: (progress: number, step: string) => void;
 }
 
 export interface CloneProject {

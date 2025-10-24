@@ -88,6 +88,7 @@ export function Clone() {
         source: url,
         type: 'url',
         includeAssets: true, // Enable asset downloading
+        useBrowserAutomation: options.useBrowserAutomation, // Enable Playwright for dynamic content
         onProgress: (p, step) => {
           setProgress(p);
           setCurrentStep(step);
