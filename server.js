@@ -9,38 +9,62 @@ const __dirname = dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+console.log('🚀 Starting Website Cloner Pro server...');
+console.log('📁 Working directory:', __dirname);
+console.log('📦 Dist directory:', join(__dirname, 'dist'));
+
 // Parse JSON bodies
 app.use(express.json());
+
+// Health check endpoints (must be BEFORE static middleware)
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'ok',
+    message: 'Website Cloner Pro API is running',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});
 
 // API route handler for /api/capture
 app.post('/api/capture', async (req, res) => {
   try {
+    console.log('📥 Received capture request for:', req.body?.url);
+
     // Dynamically import the capture handler
     const { default: captureHandler } = await import('./api/capture.js');
 
     // Call the handler with Express req/res
     await captureHandler(req, res);
   } catch (error) {
-    console.error('API error:', error);
+    console.error('❌ API error:', error);
     res.status(500).json({
       error: 'Internal server error',
-      message: error.message
+      message: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 });
 
 // Serve static files from the dist directory
+// This will serve index.html for '/' automatically
 app.use(express.static(join(__dirname, 'dist')));
 
-// Handle client-side routing - serve index.html for all non-API routes
+// Handle client-side routing - serve index.html for any other routes
+// that didn't match static files or API endpoints
 app.get('*', (req, res) => {
-  if (!req.path.startsWith('/api')) {
-    res.sendFile(join(__dirname, 'dist', 'index.html'));
-  }
+  console.log('📄 Serving SPA for route:', req.path);
+  res.sendFile(join(__dirname, 'dist', 'index.html'));
 });
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`✅ Server running on http://0.0.0.0:${PORT}`);
+  console.log('');
+  console.log('✅ Server successfully started!');
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log(`🌐 Server running on http://0.0.0.0:${PORT}`);
   console.log(`📦 Serving static files from: ${join(__dirname, 'dist')}`);
-  console.log(`🔌 API endpoint available at: /api/capture`);
+  console.log(`🔌 API endpoint: POST /api/capture`);
+  console.log(`💚 Health check: GET /health`);
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('');
 });
