@@ -50,12 +50,16 @@ app.post('/api/capture', async (req, res) => {
 // This will serve index.html for '/' automatically
 app.use(express.static(join(__dirname, 'dist')));
 
-// Handle client-side routing - serve index.html for any other routes
+// Handle client-side routing - serve index.html for any routes
 // that didn't match static files or API endpoints
-// Note: Express 5 uses '/*' instead of '*' for wildcard routes
-app.get('/*', (req, res) => {
-  console.log('📄 Serving SPA for route:', req.path);
-  res.sendFile(join(__dirname, 'dist', 'index.html'));
+app.use((req, res) => {
+  // Only serve index.html for non-API routes
+  if (!req.path.startsWith('/api') && !req.path.startsWith('/health')) {
+    console.log('📄 Serving SPA for route:', req.path);
+    res.sendFile(join(__dirname, 'dist', 'index.html'));
+  } else {
+    res.status(404).json({ error: 'Not found' });
+  }
 });
 
 app.listen(PORT, '0.0.0.0', () => {
