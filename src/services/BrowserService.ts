@@ -51,6 +51,33 @@ export interface ResponsiveCaptureResult extends CaptureResult {
   mediaQueries: MediaQuery[];
 }
 
+export interface InteractiveState {
+  selector: string;
+  states: {
+    normal: Record<string, string>;
+    hover?: Record<string, string>;
+    focus?: Record<string, string>;
+    active?: Record<string, string>;
+    disabled?: Record<string, string>;
+  };
+  pseudoElements: {
+    before?: Record<string, string>;
+    after?: Record<string, string>;
+  };
+  elementType: string;
+}
+
+export interface InteractiveCaptureResult extends CaptureResult {
+  interactiveElements: InteractiveState[];
+  totalInteractive: number;
+  statesDetected: {
+    hover: number;
+    focus: number;
+    active: number;
+    disabled: number;
+  };
+}
+
 export class BrowserService {
   /**
    * Check if browser automation is available
@@ -149,6 +176,46 @@ export class BrowserService {
       console.error('❌ Failed to capture responsive styles:', error);
       throw new Error(
         `Responsive capture failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    }
+  }
+
+  /**
+   * Capture interactive states for all interactive elements (hover, focus, active)
+   */
+  async captureInteractiveStates(url: string): Promise<InteractiveCaptureResult> {
+    console.log(`🎨 Requesting interactive state capture for ${url} via API...`);
+
+    try {
+      const apiUrl = '/api/capture';
+
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          url,
+          interactive: true,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(errorData.error || `API request failed with status ${response.status}`);
+      }
+
+      const result: InteractiveCaptureResult = await response.json();
+
+      console.log('✅ Interactive capture completed');
+      console.log(`🎨 Interactive elements: ${result.totalInteractive}`);
+      console.log(`🎯 States detected:`, result.statesDetected);
+
+      return result;
+    } catch (error) {
+      console.error('❌ Failed to capture interactive states:', error);
+      throw new Error(
+        `Interactive capture failed: ${error instanceof Error ? error.message : 'Unknown error'}`
       );
     }
   }

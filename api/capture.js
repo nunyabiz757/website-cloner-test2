@@ -20,7 +20,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { url, responsive = false, breakpoints = DEFAULT_BREAKPOINTS } = req.body;
+  const { url, responsive = false, interactive = false, breakpoints = DEFAULT_BREAKPOINTS } = req.body;
 
   if (!url) {
     return res.status(400).json({ error: 'URL is required' });
@@ -255,6 +255,182 @@ export default async function handler(req, res) {
       console.log(`✅ Responsive capture complete: ${responsiveStyles.length} breakpoints`);
     }
 
+    // If interactive capture is enabled, capture hover/focus/active states
+    let interactiveElements = [];
+    let totalInteractive = 0;
+    let statesDetected = { hover: 0, focus: 0, active: 0, disabled: 0 };
+
+    if (interactive) {
+      console.log('🎨 Starting interactive state capture...');
+
+      // Find all interactive elements
+      const interactiveSelectors = await page.evaluate(() => {
+        const elements = [];
+        const interactiveTypes = [
+          'button',
+          'a',
+          'input:not([type="hidden"])',
+          'textarea',
+          'select',
+          '[role="button"]',
+          '[onclick]',
+          '.btn',
+          '.button',
+        ];
+
+        interactiveTypes.forEach((type) => {
+          const found = document.querySelectorAll(type);
+          found.forEach((el, idx) => {
+            const tag = el.tagName.toLowerCase();
+            const id = el.id ? `#${el.id}` : '';
+            const classes = el.className && typeof el.className === 'string'
+              ? `.${el.className.split(' ').filter(c => c).join('.')}`
+              : '';
+            const selector = `${tag}${id}${classes}`.slice(0, 100) || `${tag}:nth-of-type(${idx + 1})`;
+
+            elements.push({
+              selector,
+              type: tag,
+              index: elements.length,
+            });
+          });
+        });
+
+        return elements;
+      });
+
+      totalInteractive = interactiveSelectors.length;
+      console.log(`🎯 Found ${totalInteractive} interactive elements`);
+
+      // Limit to first 30 elements for performance
+      const elementsToCapture = interactiveSelectors.slice(0, 30);
+
+      for (const { selector, type } of elementsToCapture) {
+        try {
+          // Get normal state
+          const normalStyles = await page.evaluate((sel) => {
+            const el = document.querySelector(sel);
+            if (!el) return null;
+            const computed = window.getComputedStyle(el);
+            return {
+              backgroundColor: computed.backgroundColor,
+              color: computed.color,
+              borderColor: computed.borderColor,
+              transform: computed.transform,
+              boxShadow: computed.boxShadow,
+              opacity: computed.opacity,
+              cursor: computed.cursor,
+            };
+          }, selector);
+
+          if (!normalStyles) continue;
+
+          const states = { normal: normalStyles };
+          const pseudoElements = {};
+
+          // Try to get hover state
+          try {
+            await page.hover(selector, { timeout: 1000 });
+            await page.waitForTimeout(300);
+
+            const hoverStyles = await page.evaluate((sel) => {
+              const el = document.querySelector(sel);
+              if (!el) return null;
+              const computed = window.getComputedStyle(el);
+              return {
+                backgroundColor: computed.backgroundColor,
+                color: computed.color,
+                borderColor: computed.borderColor,
+                transform: computed.transform,
+                boxShadow: computed.boxShadow,
+                opacity: computed.opacity,
+                cursor: computed.cursor,
+              };
+            }, selector);
+
+            // Check if hover actually changed anything
+            if (hoverStyles && JSON.stringify(hoverStyles) !== JSON.stringify(normalStyles)) {
+              states.hover = hoverStyles;
+              statesDetected.hover++;
+            }
+          } catch (e) {
+            // Element not hoverable
+          }
+
+          // Try to get focus state (for focusable elements)
+          if (['input', 'textarea', 'button', 'a', 'select'].includes(type)) {
+            try {
+              await page.focus(selector, { timeout: 1000 });
+              await page.waitForTimeout(300);
+
+              const focusStyles = await page.evaluate((sel) => {
+                const el = document.querySelector(sel);
+                if (!el) return null;
+                const computed = window.getComputedStyle(el);
+                return {
+                  outline: computed.outline,
+                  outlineColor: computed.outlineColor,
+                  outlineWidth: computed.outlineWidth,
+                  boxShadow: computed.boxShadow,
+                  borderColor: computed.borderColor,
+                };
+              }, selector);
+
+              if (focusStyles && JSON.stringify(focusStyles) !== JSON.stringify(normalStyles)) {
+                states.focus = focusStyles;
+                statesDetected.focus++;
+              }
+            } catch (e) {
+              // Element not focusable
+            }
+          }
+
+          // Get pseudo-elements
+          const pseudos = await page.evaluate((sel) => {
+            const el = document.querySelector(sel);
+            if (!el) return {};
+
+            const before = window.getComputedStyle(el, '::before');
+            const after = window.getComputedStyle(el, '::after');
+
+            return {
+              before: before.content !== 'none' && before.content !== ''
+                ? {
+                    content: before.content,
+                    display: before.display,
+                    color: before.color,
+                    fontSize: before.fontSize,
+                  }
+                : null,
+              after: after.content !== 'none' && after.content !== ''
+                ? {
+                    content: after.content,
+                    display: after.display,
+                    color: after.color,
+                    fontSize: after.fontSize,
+                  }
+                : null,
+            };
+          }, selector);
+
+          if (pseudos.before) pseudoElements.before = pseudos.before;
+          if (pseudos.after) pseudoElements.after = pseudos.after;
+
+          interactiveElements.push({
+            selector,
+            states,
+            pseudoElements,
+            elementType: type,
+          });
+        } catch (error) {
+          console.warn(`⚠️ Could not capture states for ${selector}`);
+        }
+      }
+
+      console.log(`✅ Interactive capture complete: ${interactiveElements.length} elements`);
+      console.log(`🎯 States detected:`, statesDetected);
+    }
+
     await browser.close();
 
     const response = {
@@ -268,6 +444,13 @@ export default async function handler(req, res) {
     if (responsive) {
       response.responsiveStyles = responsiveStyles;
       response.mediaQueries = mediaQueries;
+    }
+
+    // Add interactive data if captured
+    if (interactive) {
+      response.interactiveElements = interactiveElements;
+      response.totalInteractive = totalInteractive;
+      response.statesDetected = statesDetected;
     }
 
     return res.status(200).json(response);
