@@ -47,17 +47,20 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci --only=production
-
-# Install Playwright browsers
-RUN npx playwright install chromium --with-deps
+# Install ALL dependencies (including devDependencies for build)
+RUN npm ci
 
 # Copy application files
 COPY . .
 
 # Build the application
 RUN npm run build
+
+# Install Playwright browsers AFTER build
+RUN npx playwright install chromium --with-deps
+
+# Remove devDependencies to reduce image size
+RUN npm prune --production
 
 # Expose port (Railway will provide PORT env variable)
 EXPOSE 3000
