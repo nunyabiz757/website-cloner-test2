@@ -35,7 +35,8 @@
       "Bash(git branch:*)",
       "Bash(git push:*)",
       "Bash(git pull:*)",
-      "Bash(npx playwright install chromium)"
+      "Bash(npx playwright install chromium)",
+      "Bash(vercel:*)"
     ],
     "deny": [],
     "ask": []

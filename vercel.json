@@ -1,11 +1,8 @@
 {
-  "buildCommand": "npm run build && npx playwright install chromium --with-deps",
   "functions": {
-    "api/**/*.ts": {
-      "maxDuration": 60
+    "api/capture.ts": {
+      "maxDuration": 10,
+      "memory": 1024
     }
-  },
-  "env": {
-    "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD": "0"
   }
 }
