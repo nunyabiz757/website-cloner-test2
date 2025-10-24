@@ -52,7 +52,8 @@ app.use(express.static(join(__dirname, 'dist')));
 
 // Handle client-side routing - serve index.html for any other routes
 // that didn't match static files or API endpoints
-app.get('*', (req, res) => {
+// Note: Express 5 uses '/*' instead of '*' for wildcard routes
+app.get('/*', (req, res) => {
   console.log('📄 Serving SPA for route:', req.path);
   res.sendFile(join(__dirname, 'dist', 'index.html'));
 });
