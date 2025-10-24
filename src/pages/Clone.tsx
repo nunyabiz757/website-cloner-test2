@@ -195,6 +195,10 @@ export function Clone() {
   const handleExportToWordPress = async () => {
     if (!cloneResult) return;
 
+    let themeDownloaded = false;
+    let wxrDownloaded = false;
+    let projectName = '';
+
     try {
       // Extract CSS and JS from HTML
       const cssMatch = cloneResult.clonedHtml.match(/<style[^>]*>([\s\S]*?)<\/style>/gi);
@@ -204,8 +208,9 @@ export function Clone() {
       const js = jsMatch ? jsMatch.map(s => s.replace(/<\/?script[^>]*>/gi, '')).join('\n\n') : '';
 
       // Get project name from URL
-      const projectName = new URL(cloneResult.originalUrl).hostname.replace('www.', '');
+      projectName = new URL(cloneResult.originalUrl).hostname.replace('www.', '');
 
+      console.log('Generating WordPress theme...');
       // Generate WordPress theme
       const themeGenerator = new ThemeGenerator();
       const themeBlob = await themeGenerator.generateTheme({
@@ -217,6 +222,7 @@ export function Clone() {
         detection: cloneResult.metadata as any,
       });
 
+      console.log('Downloading theme ZIP...');
       // Download theme ZIP
       const themeUrl = URL.createObjectURL(themeBlob);
       const themeLink = document.createElement('a');
@@ -226,7 +232,9 @@ export function Clone() {
       themeLink.click();
       document.body.removeChild(themeLink);
       URL.revokeObjectURL(themeUrl);
+      themeDownloaded = true;
 
+      console.log('Generating WXR export...');
       // Generate WXR export
       const wxrExporter = new WXRExporter();
       const wxr = wxrExporter.generateWXR({
@@ -236,7 +244,10 @@ export function Clone() {
         detection: cloneResult.metadata as any,
       });
 
-      // Download WXR file
+      console.log('Downloading WXR file...');
+      // Download WXR file with small delay to prevent browser blocking
+      await new Promise(resolve => setTimeout(resolve, 100));
+
       const wxrBlob = new Blob([wxr], { type: 'application/xml' });
       const wxrUrl = URL.createObjectURL(wxrBlob);
       const wxrLink = document.createElement('a');
@@ -246,11 +257,30 @@ export function Clone() {
       wxrLink.click();
       document.body.removeChild(wxrLink);
       URL.revokeObjectURL(wxrUrl);
+      wxrDownloaded = true;
 
-      alert(`WordPress export complete!\n\n2 files downloaded:\n1. ${projectName}-theme.zip (WordPress theme)\n2. ${projectName}-export.xml (WXR import file)\n\nInstall the theme and import the XML file in WordPress.`);
+      console.log('WordPress export completed successfully');
+
+      // Use setTimeout to show alert after downloads complete
+      setTimeout(() => {
+        alert(`WordPress export complete!\n\n2 files downloaded:\n1. ${projectName}-theme.zip (WordPress theme)\n2. ${projectName}-export.xml (WXR import file)\n\nInstall the theme and import the XML file in WordPress.`);
+      }, 300);
+
     } catch (error) {
       console.error('WordPress export error:', error);
-      alert('Failed to export to WordPress. Please try again.');
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+
+      // Build more informative error message based on what succeeded
+      let statusMessage = '';
+      if (themeDownloaded && wxrDownloaded) {
+        statusMessage = 'Both files were downloaded successfully, but an error occurred afterwards.';
+      } else if (themeDownloaded) {
+        statusMessage = 'Theme ZIP was downloaded, but WXR export failed.';
+      } else {
+        statusMessage = 'Export failed before downloads could complete.';
+      }
+
+      alert(`Failed to export to WordPress.\n\nStatus: ${statusMessage}\nError: ${errorMessage}\n\nPlease check the browser console for more details.`);
     }
   };
 
