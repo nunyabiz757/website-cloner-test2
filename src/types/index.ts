@@ -23,6 +23,7 @@ export interface CloneProject {
   assets?: ClonedAsset[];
   archived?: boolean;
   metadata?: WebsiteMetadata;
+  detection?: any; // Component detection results
 }
 
 export interface ClonedAsset {

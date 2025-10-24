@@ -156,7 +156,7 @@ export class CloneService {
         project.progress = 70;
         project.currentStep = 'Embedding assets in HTML';
 
-        const rewrittenHtml = this.rewriteHtmlWithLocalPaths(html, allAssets);
+        const rewrittenHtml = this.embedAssetsInHtml(html, allAssets);
         project.originalHtml = rewrittenHtml;
         console.log('startAnalysis: HTML rewritten, new size:', new Blob([rewrittenHtml]).size, 'bytes');
 
@@ -838,9 +838,13 @@ export class CloneService {
     }
   }
 
-  private rewriteHtmlWithLocalPaths(html: string, assets: ClonedAsset[]): string {
+  private embedAssetsInHtml(html: string, assets: ClonedAsset[]): string {
     let rewrittenHtml = html;
+    let imagesEmbedded = 0;
+    let cssInlined = 0;
+    let fontsEmbedded = 0;
 
+    // First, embed images and fonts as data URIs
     for (const asset of assets) {
       if (asset.originalUrl.startsWith('inline-')) continue;
 
@@ -849,11 +853,63 @@ export class CloneService {
 
       if (asset.type === 'image' && asset.content?.startsWith('data:')) {
         rewrittenHtml = rewrittenHtml.replace(regex, asset.content);
-      } else {
-        rewrittenHtml = rewrittenHtml.replace(regex, asset.localPath);
+        imagesEmbedded++;
+      } else if (asset.type === 'font' && asset.content?.startsWith('data:')) {
+        rewrittenHtml = rewrittenHtml.replace(regex, asset.content);
+        fontsEmbedded++;
       }
     }
 
+    // Now inline CSS stylesheets
+    const cssAssets = assets.filter(a => a.type === 'css' && !a.originalUrl.startsWith('inline-'));
+
+    for (const cssAsset of cssAssets) {
+      if (!cssAsset.content) continue;
+
+      // Find the <link> tag for this stylesheet
+      const escapedUrl = cssAsset.originalUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const linkRegex = new RegExp(`<link[^>]*href=["']${escapedUrl}["'][^>]*>`, 'gi');
+
+      // Replace the <link> tag with an inline <style> tag
+      const styleTag = `<style data-original-href="${cssAsset.originalUrl}">\n${cssAsset.content}\n</style>`;
+      rewrittenHtml = rewrittenHtml.replace(linkRegex, styleTag);
+      cssInlined++;
+    }
+
+    console.log(`embedAssetsInHtml: Embedded ${imagesEmbedded} images, ${fontsEmbedded} fonts as data URIs, inlined ${cssInlined} CSS files`);
+    loggingService.debug('clone', `Embedded ${imagesEmbedded + fontsEmbedded + cssInlined} assets in HTML`);
+    return rewrittenHtml;
+  }
+
+  private rewriteHtmlWithLocalPaths(html: string, assets: ClonedAsset[]): string {
+    let rewrittenHtml = html;
+    let embedded = 0;
+    let replaced = 0;
+
+    for (const asset of assets) {
+      if (asset.originalUrl.startsWith('inline-')) continue;
+
+      const escapedUrl = asset.originalUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(escapedUrl, 'g');
+
+      // Embed images as data URIs
+      if (asset.type === 'image' && asset.content?.startsWith('data:')) {
+        rewrittenHtml = rewrittenHtml.replace(regex, asset.content);
+        embedded++;
+      }
+      // Embed fonts as data URIs
+      else if (asset.type === 'font' && asset.content?.startsWith('data:')) {
+        rewrittenHtml = rewrittenHtml.replace(regex, asset.content);
+        embedded++;
+      }
+      // For CSS and JS, we need to inline them differently
+      // Keep original URLs for now - will be inlined in separate step
+      else {
+        replaced++;
+      }
+    }
+
+    console.log(`rewriteHtmlWithLocalPaths: Embedded ${embedded} assets as data URIs, ${replaced} assets kept as URLs`);
     loggingService.debug('clone', `Rewrote HTML with ${assets.length} local paths`);
     return rewrittenHtml;
   }
