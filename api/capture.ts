@@ -1,7 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { chromium } from 'playwright';
 
 export const config = {
-  maxDuration: 10,
+  maxDuration: 300, // 5 minutes - Railway has no strict timeout
 };
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -16,69 +17,139 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: 'URL is required' });
   }
 
+  let browser;
+
   try {
-    console.log('Fetching URL via proxy:', url);
+    console.log('Launching Chromium browser for:', url);
 
-    // Use a simple fetch with a longer timeout to get rendered content
-    // This is a fallback approach for Vercel free tier
-    // For full browser automation, you'd need Vercel Pro or a dedicated service
-
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 8000);
-
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-      },
-      signal: controller.signal,
+    // Launch full Chromium with Playwright (Railway supports this!)
+    browser = await chromium.launch({
+      headless: true,
+      args: [
+        '--disable-dev-shm-usage',
+        '--disable-setuid-sandbox',
+        '--no-sandbox',
+      ],
     });
 
-    clearTimeout(timeout);
+    const context = await browser.newContext({
+      viewport: { width: 1920, height: 1080 },
+      userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+    });
 
-    if (!response.ok) {
-      throw new Error(`Failed to fetch: ${response.status} ${response.statusText}`);
-    }
+    const page = await context.newPage();
 
-    const html = await response.text();
-
-    // Basic resource extraction from HTML
+    // Track resources
     const resources = {
-      images: extractUrls(html, /<img[^>]+src=["']([^"']+)["']/gi),
-      fonts: extractUrls(html, /url\(["']?([^)"']+\.(?:woff2?|ttf|eot|otf))["']?\)/gi),
-      stylesheets: extractUrls(html, /<link[^>]+href=["']([^"']+\.css)["']/gi),
+      images: [] as string[],
+      fonts: [] as string[],
+      stylesheets: [] as string[],
     };
 
-    console.log('✅ Page fetched successfully');
+    page.on('request', (request) => {
+      const resourceType = request.resourceType();
+      const reqUrl = request.url();
+
+      if (resourceType === 'image') {
+        resources.images.push(reqUrl);
+      } else if (resourceType === 'font') {
+        resources.fonts.push(reqUrl);
+      } else if (resourceType === 'stylesheet') {
+        resources.stylesheets.push(reqUrl);
+      }
+    });
+
+    console.log('Navigating to URL...');
+    await page.goto(url, {
+      waitUntil: 'networkidle',
+      timeout: 60000,
+    });
+
+    // Wait for lazy-loaded content
+    await page.waitForTimeout(2000);
+
+    // Scroll to bottom to trigger lazy loading
+    await page.evaluate(async () => {
+      await new Promise<void>((resolve) => {
+        let totalHeight = 0;
+        const distance = 100;
+        const timer = setInterval(() => {
+          const scrollHeight = document.body.scrollHeight;
+          window.scrollBy(0, distance);
+          totalHeight += distance;
+
+          if (totalHeight >= scrollHeight) {
+            clearInterval(timer);
+            resolve();
+          }
+        }, 100);
+      });
+    });
+
+    // Scroll back to top
+    await page.evaluate(() => window.scrollTo(0, 0));
+
+    // Extract HTML
+    const html = await page.content();
+
+    // Extract CSS
+    const styles = await page.evaluate(() => {
+      let allStyles = '';
+
+      // Extract inline styles
+      const styleElements = document.querySelectorAll('style');
+      styleElements.forEach((style) => {
+        allStyles += style.textContent + '\n';
+      });
+
+      // Extract linked stylesheets
+      const linkElements = document.querySelectorAll('link[rel="stylesheet"]');
+      linkElements.forEach((link) => {
+        const sheet = (link as HTMLLinkElement).sheet;
+        if (sheet) {
+          try {
+            const rules = Array.from(sheet.cssRules);
+            rules.forEach((rule) => {
+              allStyles += rule.cssText + '\n';
+            });
+          } catch (e) {
+            console.warn('Could not access stylesheet:', link);
+          }
+        }
+      });
+
+      return allStyles;
+    });
+
+    // Extract scripts
+    const scripts = await page.evaluate(() => {
+      return Array.from(document.querySelectorAll('script[src]'))
+        .map((script) => (script as HTMLScriptElement).src);
+    });
+
+    console.log('✅ Page captured successfully');
     console.log(`📄 HTML length: ${html.length} chars`);
-    console.log(`📦 Resources: ${resources.images.length} images, ${resources.fonts.length} fonts, ${resources.stylesheets.length} stylesheets`);
+    console.log(`🎨 CSS length: ${styles.length} chars`);
+    console.log(`📦 Resources: ${resources.images.length} images, ${resources.fonts.length} fonts`);
+
+    await browser.close();
 
     return res.status(200).json({
       html,
-      styles: '', // CSS would need separate fetches
-      scripts: extractUrls(html, /<script[^>]+src=["']([^"']+)["']/gi),
+      styles,
+      scripts,
       resources,
-      note: 'Using fallback fetch mode. For full browser automation with JavaScript execution, upgrade to Vercel Pro or use a dedicated browser automation service.',
     });
   } catch (error) {
-    console.error('❌ Failed to fetch page:', error);
+    console.error('❌ Failed to capture page:', error);
+
+    if (browser) {
+      await browser.close();
+    }
 
     return res.status(500).json({
-      error: 'Failed to fetch page',
+      error: 'Failed to capture page',
       message: error instanceof Error ? error.message : 'Unknown error',
-      note: 'Browser automation requires Vercel Pro tier or external service like BrowserBase, Apify, or Bright Data.',
     });
   }
-}
-
-function extractUrls(html: string, regex: RegExp): string[] {
-  const urls: string[] = [];
-  let match;
-
-  while ((match = regex.exec(html)) !== null) {
-    if (match[1]) {
-      urls.push(match[1]);
-    }
-  }
-
-  return urls;
 }
