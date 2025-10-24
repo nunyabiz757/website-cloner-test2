@@ -20,7 +20,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { url, responsive = false, interactive = false, breakpoints = DEFAULT_BREAKPOINTS } = req.body;
+  const { url, responsive = false, interactive = false, animations = false, breakpoints = DEFAULT_BREAKPOINTS } = req.body;
 
   if (!url) {
     return res.status(400).json({ error: 'URL is required' });
@@ -431,6 +431,96 @@ export default async function handler(req, res) {
       console.log(`🎯 States detected:`, statesDetected);
     }
 
+    // If animation detection is enabled, extract keyframes and animated elements
+    let animationData = null;
+
+    if (animations) {
+      console.log('🎬 Starting animation detection...');
+
+      // Extract keyframes and find animated elements
+      const animationReport = await page.evaluate(() => {
+        const keyframes = [];
+        const animatedElements = [];
+
+        // Extract @keyframes from stylesheets
+        const styleSheets = Array.from(document.styleSheets);
+        styleSheets.forEach((sheet) => {
+          try {
+            const rules = Array.from(sheet.cssRules || sheet.rules);
+            rules.forEach((rule) => {
+              if (rule instanceof CSSKeyframesRule) {
+                keyframes.push({
+                  name: rule.name,
+                  rules: rule.cssText,
+                });
+              }
+            });
+          } catch (e) {
+            // CORS blocked stylesheet
+          }
+        });
+
+        // Find elements with animations or transitions
+        const allElements = document.querySelectorAll('*');
+        allElements.forEach((el, index) => {
+          const computed = window.getComputedStyle(el);
+
+          const animationName = computed.animationName;
+          const hasAnimation = animationName && animationName !== 'none';
+
+          const transitionProperty = computed.transitionProperty;
+          const hasTransition = transitionProperty && transitionProperty !== 'none';
+
+          const transform = computed.transform;
+          const hasTransform = transform && transform !== 'none';
+
+          if (hasAnimation || hasTransition || hasTransform) {
+            const tag = el.tagName.toLowerCase();
+            const id = el.id ? `#${el.id}` : '';
+            const classes = el.className && typeof el.className === 'string'
+              ? `.${el.className.split(' ').filter(c => c).join('.')}`
+              : '';
+            const selector = `${tag}${id}${classes}`.slice(0, 100) || `${tag}:nth-of-type(${index + 1})`;
+
+            animatedElements.push({
+              selector,
+              elementType: tag,
+              hasAnimation,
+              hasTransition,
+              animation: hasAnimation ? {
+                name: animationName,
+                duration: computed.animationDuration,
+                timingFunction: computed.animationTimingFunction,
+                delay: computed.animationDelay,
+                iterationCount: computed.animationIterationCount,
+              } : undefined,
+              transitions: hasTransition ? [{
+                property: transitionProperty,
+                duration: computed.transitionDuration,
+                timingFunction: computed.transitionTimingFunction,
+                delay: computed.transitionDelay,
+              }] : undefined,
+              transform: hasTransform ? transform : undefined,
+            });
+          }
+        });
+
+        return {
+          keyframes,
+          animatedElements,
+          totalAnimatedElements: animatedElements.length,
+          elementsWithAnimations: animatedElements.filter(e => e.hasAnimation).length,
+          elementsWithTransitions: animatedElements.filter(e => e.hasTransition).length,
+          elementsWithTransforms: animatedElements.filter(e => e.transform).length,
+        };
+      });
+
+      animationData = animationReport;
+      console.log(`✅ Animation detection complete`);
+      console.log(`🎬 Total animated: ${animationData.totalAnimatedElements}`);
+      console.log(`🔑 Keyframes: ${animationData.keyframes.length}`);
+    }
+
     await browser.close();
 
     const response = {
@@ -451,6 +541,11 @@ export default async function handler(req, res) {
       response.interactiveElements = interactiveElements;
       response.totalInteractive = totalInteractive;
       response.statesDetected = statesDetected;
+    }
+
+    // Add animation data if captured
+    if (animations) {
+      response.animations = animationData;
     }
 
     return res.status(200).json(response);

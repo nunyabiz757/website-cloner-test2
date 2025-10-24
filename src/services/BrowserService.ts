@@ -78,6 +78,26 @@ export interface InteractiveCaptureResult extends CaptureResult {
   };
 }
 
+export interface AnimationReport {
+  totalAnimatedElements: number;
+  elementsWithAnimations: number;
+  elementsWithTransitions: number;
+  elementsWithTransforms: number;
+  keyframes: Array<{
+    name: string;
+    rules: string;
+  }>;
+  animatedElements: Array<{
+    selector: string;
+    hasAnimation: boolean;
+    hasTransition: boolean;
+  }>;
+}
+
+export interface AnimationCaptureResult extends CaptureResult {
+  animations: AnimationReport;
+}
+
 export class BrowserService {
   /**
    * Check if browser automation is available
@@ -216,6 +236,46 @@ export class BrowserService {
       console.error('❌ Failed to capture interactive states:', error);
       throw new Error(
         `Interactive capture failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    }
+  }
+
+  /**
+   * Capture page with animation detection (transitions, keyframes, transforms)
+   */
+  async captureWithAnimations(url: string): Promise<AnimationCaptureResult> {
+    console.log(`🎬 Requesting animation detection for ${url} via API...`);
+
+    try {
+      const apiUrl = '/api/capture';
+
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          url,
+          animations: true,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(errorData.error || `API request failed with status ${response.status}`);
+      }
+
+      const result: AnimationCaptureResult = await response.json();
+
+      console.log('✅ Animation detection completed');
+      console.log(`🎬 Animated elements: ${result.animations.totalAnimatedElements}`);
+      console.log(`🔑 Keyframes: ${result.animations.keyframes.length}`);
+
+      return result;
+    } catch (error) {
+      console.error('❌ Failed to detect animations:', error);
+      throw new Error(
+        `Animation detection failed: ${error instanceof Error ? error.message : 'Unknown error'}`
       );
     }
   }
