@@ -1,5 +1,5 @@
 import * as cheerio from 'cheerio';
-import { NavigationDetector, NavigationComponent } from '../NavigationDetector';
+import { NavigationComponent } from '../NavigationDetector';
 import { EmbedDetector, EmbedComponent } from '../EmbedDetector';
 import { InteractivePatternDetector, InteractiveComponent } from '../InteractivePatternDetector';
 import { ContentPatternDetector, ContentComponent } from '../ContentPatternDetector';
@@ -51,7 +51,6 @@ export interface DetectionResult {
 }
 
 export class ComponentDetector {
-  private navigationDetector = new NavigationDetector();
   private embedDetector = new EmbedDetector();
   private interactiveDetector = new InteractivePatternDetector();
   private contentDetector = new ContentPatternDetector();
@@ -138,15 +137,13 @@ export class ComponentDetector {
       console.log(`✓ Found ${builderComponents.length} ${builder} components`);
       components.push(...builderComponents);
 
-      // A2: Critical fallback #1 - Navigation (always detect)
-      console.log('🔍 Step A2: Critical fallback - Navigation detection...');
-      navigation = this.navigationDetector.detect(document);
-      console.log(`✓ Found ${navigation.length} navigation components`);
-
-      // A3: Critical fallback #2 - Embeds (always detect)
-      console.log('🔍 Step A3: Critical fallback - Embed detection...');
+      // A2: Critical fallback - Embeds (always detect even with builder)
+      console.log('🔍 Step A2: Critical fallback - Embed detection...');
       embeds = this.embedDetector.detect($);
       console.log(`✓ Found ${embeds.length} embed components`);
+
+      // Note: Navigation detection happens in browser context (via captureWithNavigation)
+      // Interactive and Content patterns are skipped in builder-first path for performance
 
       console.log('✓ Builder-first path complete');
     } else {
@@ -158,31 +155,28 @@ export class ComponentDetector {
       console.log('🌐 Using SEMANTIC-FIRST detection path');
       console.log('   No page builder detected - full semantic scan');
 
-      // B1: Navigation Detection (Phase 6)
-      console.log('🔍 Step B1: Navigation detection...');
-      navigation = this.navigationDetector.detect(document);
-      console.log(`✓ Found ${navigation.length} navigation components`);
-
-      // B2: Embed Detection (Phase 7)
-      console.log('🔍 Step B2: Embed detection...');
+      // B1: Embed Detection (Phase 7)
+      console.log('🔍 Step B1: Embed detection...');
       embeds = this.embedDetector.detect($);
       console.log(`✓ Found ${embeds.length} embed components`);
 
-      // B3: Interactive Patterns (Phase 8)
-      console.log('🔍 Step B3: Interactive pattern detection...');
+      // B2: Interactive Patterns (Phase 8)
+      console.log('🔍 Step B2: Interactive pattern detection...');
       interactive = this.interactiveDetector.detect($);
       console.log(`✓ Found ${interactive.length} interactive components`);
 
-      // B4: Content Patterns (Phase 9)
-      console.log('🔍 Step B4: Content pattern detection...');
+      // B3: Content Patterns (Phase 9)
+      console.log('🔍 Step B3: Content pattern detection...');
       content = this.contentDetector.detect($);
       console.log(`✓ Found ${content.length} content components`);
 
-      // B5: Semantic Components (fallback)
-      console.log('🔍 Step B5: Semantic component detection...');
+      // B4: Semantic Components (fallback)
+      console.log('🔍 Step B4: Semantic component detection...');
       const semanticComponents = this.detectSemanticComponents($);
       console.log(`✓ Found ${semanticComponents.length} semantic components`);
       components.push(...semanticComponents);
+
+      // Note: Navigation detection happens in browser context (via captureWithNavigation)
 
       console.log('✓ Semantic-first path complete');
     }
