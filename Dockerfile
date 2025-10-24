@@ -65,5 +65,5 @@ RUN npm prune --production
 # Expose port (Railway will provide PORT env variable)
 EXPOSE 3000
 
-# Start command - serve the built files and API
-CMD ["npm", "run", "preview", "--", "--host", "0.0.0.0", "--port", "$PORT"]
+# Start command - run Express server
+CMD ["node", "server.js"]
