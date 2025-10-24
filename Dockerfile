@@ -53,7 +53,15 @@ RUN npm ci
 # Copy application files
 COPY . .
 
-# Build the application
+# Accept build arguments from Railway
+ARG VITE_SUPABASE_URL
+ARG VITE_SUPABASE_ANON_KEY
+
+# Set them as environment variables for the build
+ENV VITE_SUPABASE_URL=$VITE_SUPABASE_URL
+ENV VITE_SUPABASE_ANON_KEY=$VITE_SUPABASE_ANON_KEY
+
+# Build the application (Vite will use the ENV variables)
 RUN npm run build
 
 # Install Playwright browsers AFTER build
