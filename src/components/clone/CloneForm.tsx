@@ -15,6 +15,7 @@ export interface CloneOptions {
   useBrowserAutomation: boolean;
   captureResponsive: boolean;
   captureInteractive: boolean;
+  captureAnimations: boolean;
 }
 
 interface CloneFormProps {
@@ -38,6 +39,7 @@ export function CloneForm({ onSubmit, isLoading = false }: CloneFormProps) {
     useBrowserAutomation: false,
     captureResponsive: true,
     captureInteractive: true,
+    captureAnimations: true,
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -77,6 +79,12 @@ export function CloneForm({ onSubmit, isLoading = false }: CloneFormProps) {
       label: '🎨 Interactive States (Phase 3)',
       description: 'Capture hover, focus, active effects and pseudo-elements (+1-2 seconds)',
       className: 'bg-orange-50 hover:bg-orange-100 border-2 border-orange-300',
+    },
+    {
+      key: 'captureAnimations' as keyof CloneOptions,
+      label: '🎬 Animation Detection (Phase 4)',
+      description: 'Detect CSS animations, transitions & keyframes (+1 second)',
+      className: 'bg-blue-50 hover:bg-blue-100 border-2 border-blue-300',
     },
     {
       key: 'optimizeImages' as keyof CloneOptions,

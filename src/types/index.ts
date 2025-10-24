@@ -8,6 +8,7 @@ export interface CloneOptions {
   useBrowserAutomation?: boolean; // Enable Playwright for dynamic content
   captureResponsive?: boolean; // Enable responsive breakpoint detection (Phase 2)
   captureInteractive?: boolean; // Enable interactive state detection (Phase 3)
+  captureAnimations?: boolean; // Enable animation detection (Phase 4)
   onProgress?: (progress: number, step: string) => void;
 }
 
@@ -64,6 +65,13 @@ export interface WebsiteMetadata {
     withFocus: number;
     withActive: number;
     withPseudoElements: number;
+  };
+  animationData?: {
+    totalAnimated: number;
+    withAnimations: number;
+    withTransitions: number;
+    withTransforms: number;
+    keyframes: number;
   };
 }
 

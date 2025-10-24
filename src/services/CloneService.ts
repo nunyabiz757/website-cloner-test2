@@ -138,21 +138,32 @@ export class CloneService {
           }
 
           console.log(`Interactive capture complete: ${interactiveCaptureResult.totalInteractive} total, ${interactiveCaptureResult.statesDetected.hover} with hover`);
+        } else if (options.captureAnimations) {
+          // Use animation capture if enabled (Phase 4)
+          console.log('startAnalysis: Animation capture ENABLED');
+          project.currentStep = 'Detecting animations';
+          options.onProgress?.(15, 'Detecting animations');
+
+          const animationCaptureResult = await browserService.captureWithAnimations(options.source);
+          html = animationCaptureResult.html;
+
+          // Store animation data in project metadata
+          if (project.metadata) {
+            project.metadata.animationData = {
+              totalAnimated: animationCaptureResult.animations.totalAnimatedElements,
+              withAnimations: animationCaptureResult.animations.elementsWithAnimations,
+              withTransitions: animationCaptureResult.animations.elementsWithTransitions,
+              withTransforms: animationCaptureResult.animations.elementsWithTransforms,
+              keyframes: animationCaptureResult.animations.keyframes.length,
+            };
+          }
+
+          console.log(`Animation capture complete: ${animationCaptureResult.animations.totalAnimatedElements} animated, ${animationCaptureResult.animations.keyframes.length} keyframes`);
         } else {
           const captureResult = await browserService.capturePage(options.source);
           html = captureResult.html;
         }
         console.log('startAnalysis: Browser capture complete - HTML length:', html.length);
-        console.log('startAnalysis: Resources captured:', {
-          images: captureResult.resources.images.length,
-          fonts: captureResult.resources.fonts.length,
-          stylesheets: captureResult.resources.stylesheets.length,
-        });
-
-        // Store additional CSS captured by browser
-        if (captureResult.styles) {
-          console.log('startAnalysis: Browser captured additional CSS:', captureResult.styles.length, 'chars');
-        }
       } else {
         // Standard static HTML fetch (existing behavior)
         console.log('startAnalysis: Browser automation DISABLED - using standard fetch');
