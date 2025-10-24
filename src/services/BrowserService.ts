@@ -130,6 +130,36 @@ export interface StyleAnalysisResult extends CaptureResult {
   };
 }
 
+export interface NavigationResult extends CaptureResult {
+  navigation: {
+    totalNavigations: number;
+    byType: Record<string, number>;
+    byMethod: Record<string, number>;
+    components: Array<{
+      selector: string;
+      element: string;
+      properties: {
+        type: string;
+        confidence: number;
+        orientation?: string;
+        hasDropdowns: boolean;
+        hasHamburger: boolean;
+        linkCount: number;
+        levels: number;
+        links: Array<{
+          text: string;
+          href: string;
+          hasDropdown: boolean;
+          isActive: boolean;
+          level: number;
+        }>;
+        characteristics: string[];
+      };
+      detectionMethod: string;
+    }>;
+  };
+}
+
 export class BrowserService {
   /**
    * Check if browser automation is available
@@ -349,6 +379,46 @@ export class BrowserService {
       console.error('❌ Failed to analyze styles:', error);
       throw new Error(
         `Style analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    }
+  }
+
+  /**
+   * Capture page with navigation detection
+   */
+  async captureWithNavigation(url: string): Promise<NavigationResult> {
+    console.log(`🧭 Requesting navigation detection for ${url} via API...`);
+
+    try {
+      const apiUrl = '/api/capture';
+
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          url,
+          navigation: true,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(errorData.error || `API request failed with status ${response.status}`);
+      }
+
+      const result: NavigationResult = await response.json();
+
+      console.log('✅ Navigation detection completed');
+      console.log(`🧭 Total navigations: ${result.navigation.totalNavigations}`);
+      console.log(`📊 By type:`, result.navigation.byType);
+
+      return result;
+    } catch (error) {
+      console.error('❌ Failed to detect navigation:', error);
+      throw new Error(
+        `Navigation detection failed: ${error instanceof Error ? error.message : 'Unknown error'}`
       );
     }
   }

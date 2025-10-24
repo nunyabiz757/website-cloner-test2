@@ -10,6 +10,7 @@ export interface CloneOptions {
   captureInteractive?: boolean; // Enable interactive state detection (Phase 3)
   captureAnimations?: boolean; // Enable animation detection (Phase 4)
   captureStyleAnalysis?: boolean; // Enable advanced style analysis (Phase 5)
+  captureNavigation?: boolean; // Enable navigation detection (Phase 6)
   onProgress?: (progress: number, step: string) => void;
 }
 
@@ -81,6 +82,18 @@ export interface WebsiteMetadata {
     elementsWithShadows: number;
     elementsWithFilters: number;
     maxZIndex: number;
+  };
+  navigationData?: {
+    totalNavigations: number;
+    byType: Record<string, number>;
+    byMethod: Record<string, number>;
+    components: Array<{
+      selector: string;
+      type: string;
+      confidence: number;
+      linkCount: number;
+      detectionMethod: string;
+    }>;
   };
 }
 

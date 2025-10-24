@@ -17,6 +17,7 @@ export interface CloneOptions {
   captureInteractive: boolean;
   captureAnimations: boolean;
   captureStyleAnalysis: boolean;
+  captureNavigation: boolean;
 }
 
 interface CloneFormProps {
@@ -42,6 +43,7 @@ export function CloneForm({ onSubmit, isLoading = false }: CloneFormProps) {
     captureInteractive: true,
     captureAnimations: true,
     captureStyleAnalysis: true,
+    captureNavigation: true,
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -93,6 +95,12 @@ export function CloneForm({ onSubmit, isLoading = false }: CloneFormProps) {
       label: '🎨 Style Analysis (Phase 5)',
       description: 'Extract color palette, typography scale & visual effects (+1 second)',
       className: 'bg-indigo-50 hover:bg-indigo-100 border-2 border-indigo-300',
+    },
+    {
+      key: 'captureNavigation' as keyof CloneOptions,
+      label: '🧭 Navigation Detection (Phase 6)',
+      description: 'Multi-level detection of navigation menus & components (+1 second)',
+      className: 'bg-teal-50 hover:bg-teal-100 border-2 border-teal-300',
     },
     {
       key: 'optimizeImages' as keyof CloneOptions,

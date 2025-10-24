@@ -1,4 +1,5 @@
 import * as cheerio from 'cheerio';
+import { NavigationDetector, NavigationComponent } from '../NavigationDetector';
 
 export interface DetectedComponent {
   id: string;
@@ -22,9 +23,12 @@ export interface DetectionResult {
     byType: Record<string, number>;
     byBuilder: Record<string, number>;
   };
+  navigation?: NavigationComponent[];
 }
 
 export class ComponentDetector {
+  private navigationDetector = new NavigationDetector();
+
   private builderPatterns = {
     elementor: ['.elementor-element', '.elementor-widget', '[data-element_type]'],
     divi: ['.et_pb_module', '.et_pb_section', '.et_pb_row'],

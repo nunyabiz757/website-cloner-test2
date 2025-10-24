@@ -20,7 +20,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { url, responsive = false, interactive = false, animations = false, styleAnalysis = false, breakpoints = DEFAULT_BREAKPOINTS } = req.body;
+  const { url, responsive = false, interactive = false, animations = false, styleAnalysis = false, navigation = false, breakpoints = DEFAULT_BREAKPOINTS } = req.body;
 
   if (!url) {
     return res.status(400).json({ error: 'URL is required' });
@@ -716,6 +716,310 @@ export default async function handler(req, res) {
       console.log(`✨ Shadows: ${styleAnalysisData.visual.elementsWithShadows}`);
     }
 
+    // If navigation detection is enabled, detect all navigation components
+    let navigationData = null;
+
+    if (navigation) {
+      console.log('🧭 Starting navigation detection...');
+
+      navigationData = await page.evaluate(() => {
+        // Navigation patterns
+        const NAV_PATTERNS = {
+          semantic: ['nav'],
+          aria: ['navigation', 'menubar', 'menu'],
+          classes: [
+            'nav', 'navbar', 'navigation', 'menu', 'main-nav', 'primary-nav',
+            'site-nav', 'header-nav', 'top-nav', 'mobile-nav', 'sidebar-nav',
+            'nav-menu', 'nav-list', 'menubar', 'main-menu', 'primary-menu'
+          ],
+          dropdown: [
+            'dropdown', 'submenu', 'sub-menu', 'mega-menu', 'dropdown-menu',
+            'nav-dropdown', 'has-dropdown', 'menu-item-has-children'
+          ],
+          hamburger: [
+            'hamburger', 'burger', 'menu-toggle', 'nav-toggle', 'mobile-toggle',
+            'menu-icon', 'nav-icon', 'toggle-menu', 'menu-button'
+          ]
+        };
+
+        const detectedSelectors = new Set();
+        const navComponents = [];
+
+        // Helper: Generate unique selector
+        const generateSelector = (element, base, index) => {
+          const id = element.id;
+          if (id) return `#${id}`;
+
+          const classes = Array.from(element.classList).filter(c => c.length > 0);
+          if (classes.length > 0) return `.${classes[0]}`;
+
+          return index === 0 ? base : `${base}:nth-of-type(${index + 1})`;
+        };
+
+        // Helper: Extract links
+        const extractLinks = (element) => {
+          const links = [];
+          const anchorElements = element.querySelectorAll('a');
+
+          anchorElements.forEach((anchor) => {
+            const href = anchor.getAttribute('href') || '#';
+            const text = anchor.textContent?.trim() || '';
+            const parent = anchor.parentElement;
+
+            const hasDropdown = parent
+              ? parent.querySelectorAll('ul, ol').length > 0 ||
+                /dropdown|submenu|has-children/.test(parent.classList.toString())
+              : false;
+
+            const isActive = anchor.classList.contains('active') ||
+                            anchor.classList.contains('current') ||
+                            anchor.getAttribute('aria-current') === 'page';
+
+            let level = 0;
+            let currentParent = anchor.parentElement;
+            while (currentParent && currentParent !== element) {
+              if (currentParent.tagName === 'UL' || currentParent.tagName === 'OL') {
+                level++;
+              }
+              currentParent = currentParent.parentElement;
+            }
+
+            links.push({
+              text,
+              href,
+              hasDropdown,
+              isActive,
+              level: Math.max(1, level)
+            });
+          });
+
+          return links;
+        };
+
+        // Helper: Detect orientation
+        const detectOrientation = (element) => {
+          const firstLevelItems = element.querySelectorAll(':scope > ul > li, :scope > ol > li, :scope > li');
+          if (firstLevelItems.length === 0) return undefined;
+
+          const computed = window.getComputedStyle(element);
+          const flexDirection = computed.flexDirection;
+
+          if (flexDirection === 'row' || flexDirection === 'row-reverse') return 'horizontal';
+          if (flexDirection === 'column' || flexDirection === 'column-reverse') return 'vertical';
+          if (computed.display === 'flex' || computed.display === 'inline-flex') return 'horizontal';
+
+          if (firstLevelItems.length >= 2) {
+            const firstRect = firstLevelItems[0].getBoundingClientRect();
+            const secondRect = firstLevelItems[1].getBoundingClientRect();
+
+            if (Math.abs(firstRect.top - secondRect.top) < 10) return 'horizontal';
+            if (Math.abs(firstRect.left - secondRect.left) < 10) return 'vertical';
+          }
+
+          return undefined;
+        };
+
+        // Helper: Check for dropdowns
+        const hasDropdownMenus = (element) => {
+          const hasDropdownClass = NAV_PATTERNS.dropdown.some((className) =>
+            element.querySelector(`.${className}`) !== null
+          );
+          if (hasDropdownClass) return true;
+
+          const nestedLists = element.querySelectorAll('ul ul, ol ul, ul ol, ol ol');
+          if (nestedLists.length > 0) return true;
+
+          return element.querySelector('[aria-haspopup="true"]') !== null;
+        };
+
+        // Helper: Check for hamburger
+        const hasHamburgerMenu = (element) => {
+          const parent = element.parentElement;
+          if (!parent) return false;
+
+          return NAV_PATTERNS.hamburger.some((className) =>
+            parent.querySelector(`.${className}`) !== null ||
+            element.querySelector(`.${className}`) !== null
+          );
+        };
+
+        // Helper: Count nesting levels
+        const countNestingLevels = (element) => {
+          let maxDepth = 0;
+
+          const countDepth = (el, depth) => {
+            maxDepth = Math.max(maxDepth, depth);
+            const childLists = el.querySelectorAll(':scope > li > ul, :scope > li > ol');
+            childLists.forEach((child) => countDepth(child, depth + 1));
+          };
+
+          const topLists = element.querySelectorAll(':scope > ul, :scope > ol');
+          topLists.forEach((list) => countDepth(list, 1));
+
+          return maxDepth || 1;
+        };
+
+        // Helper: Analyze navigation
+        const analyzeNavigation = (element, baseConfidence) => {
+          const links = extractLinks(element);
+          const characteristics = [];
+
+          const orientation = detectOrientation(element);
+          if (orientation) characteristics.push(`${orientation} orientation`);
+
+          const hasDropdowns = hasDropdownMenus(element);
+          if (hasDropdowns) characteristics.push('has dropdowns');
+
+          const hasHamburger = hasHamburgerMenu(element);
+          if (hasHamburger) characteristics.push('has hamburger menu');
+
+          const levels = countNestingLevels(element);
+          if (levels > 1) characteristics.push(`${levels} levels deep`);
+
+          const computed = window.getComputedStyle(element);
+          if (computed.position === 'fixed' || computed.position === 'sticky') {
+            characteristics.push('fixed/sticky positioning');
+          }
+
+          // Determine type
+          let type = 'navigation-menu';
+          if (hasHamburger) type = 'hamburger-menu';
+          else if (hasDropdowns) type = 'dropdown-menu';
+          else if (orientation === 'horizontal') type = 'horizontal-nav';
+          else if (orientation === 'vertical') type = 'vertical-nav';
+
+          // Calculate confidence
+          let confidence = baseConfidence;
+          if (links.length >= 5) confidence += 5;
+          if (hasDropdowns) confidence += 3;
+          if (orientation) confidence += 2;
+          confidence = Math.min(100, confidence);
+
+          return {
+            type,
+            confidence,
+            orientation,
+            hasDropdowns,
+            hasHamburger,
+            linkCount: links.length,
+            levels,
+            links,
+            characteristics
+          };
+        };
+
+        // Level 1: Semantic <nav> tags
+        document.querySelectorAll('nav').forEach((nav, index) => {
+          const selector = generateSelector(nav, 'nav', index);
+          if (detectedSelectors.has(selector)) return;
+          detectedSelectors.add(selector);
+
+          const properties = analyzeNavigation(nav, 95);
+          navComponents.push({
+            selector,
+            element: nav.tagName.toLowerCase(),
+            properties,
+            detectionMethod: 'semantic'
+          });
+        });
+
+        // Level 2: ARIA role
+        document.querySelectorAll('[role="navigation"], [role="menubar"], [role="menu"]').forEach((element, index) => {
+          const selector = generateSelector(element, `[role="${element.getAttribute('role')}"]`, index);
+          if (detectedSelectors.has(selector)) return;
+          detectedSelectors.add(selector);
+
+          const baseConfidence = element.getAttribute('role') === 'navigation' ? 90 : 85;
+          const properties = analyzeNavigation(element, baseConfidence);
+          navComponents.push({
+            selector,
+            element: element.tagName.toLowerCase(),
+            properties,
+            detectionMethod: 'aria'
+          });
+        });
+
+        // Level 3: Common CSS classes
+        NAV_PATTERNS.classes.forEach((className) => {
+          document.querySelectorAll(`.${className}`).forEach((element, index) => {
+            const linkCount = element.querySelectorAll('a').length;
+            if (linkCount < 2) return;
+
+            const selector = generateSelector(element, `.${className}`, index);
+            if (detectedSelectors.has(selector)) return;
+            detectedSelectors.add(selector);
+
+            const properties = analyzeNavigation(element, 85);
+            navComponents.push({
+              selector,
+              element: element.tagName.toLowerCase(),
+              properties,
+              detectionMethod: 'class'
+            });
+          });
+        });
+
+        // Level 4: Structural patterns
+        const structuralSelectors = ['header ul li a', 'header ol li a', '.header ul li a', '#header ul li a'];
+        structuralSelectors.forEach((selector) => {
+          const links = document.querySelectorAll(selector);
+          if (links.length < 3) return;
+
+          const parentList = links[0]?.closest('ul, ol');
+          if (!parentList) return;
+
+          const listSelector = generateSelector(parentList, selector, 0);
+          if (detectedSelectors.has(listSelector)) return;
+          detectedSelectors.add(listSelector);
+
+          const properties = analyzeNavigation(parentList, 70);
+          navComponents.push({
+            selector: listSelector,
+            element: parentList.tagName.toLowerCase(),
+            properties,
+            detectionMethod: 'structural'
+          });
+        });
+
+        // Level 5: Context-based
+        document.querySelectorAll('header, footer, aside, .sidebar').forEach((context) => {
+          context.querySelectorAll('ul, ol').forEach((list, index) => {
+            const links = list.querySelectorAll('a');
+            if (links.length < 3) return;
+
+            const selector = generateSelector(list, `${context.tagName.toLowerCase()} ul`, index);
+            if (detectedSelectors.has(selector)) return;
+            detectedSelectors.add(selector);
+
+            const properties = analyzeNavigation(list, 60);
+            navComponents.push({
+              selector,
+              element: list.tagName.toLowerCase(),
+              properties,
+              detectionMethod: 'contextual'
+            });
+          });
+        });
+
+        return {
+          totalNavigations: navComponents.length,
+          byType: navComponents.reduce((acc, c) => {
+            acc[c.properties.type] = (acc[c.properties.type] || 0) + 1;
+            return acc;
+          }, {}),
+          byMethod: navComponents.reduce((acc, c) => {
+            acc[c.detectionMethod] = (acc[c.detectionMethod] || 0) + 1;
+            return acc;
+          }, {}),
+          components: navComponents
+        };
+      });
+
+      console.log(`✅ Navigation detection complete`);
+      console.log(`🧭 Total navigations: ${navigationData.totalNavigations}`);
+      console.log(`📊 By type:`, navigationData.byType);
+    }
+
     await browser.close();
 
     const response = {
@@ -746,6 +1050,11 @@ export default async function handler(req, res) {
     // Add style analysis if captured
     if (styleAnalysis) {
       response.styleAnalysis = styleAnalysisData;
+    }
+
+    // Add navigation data if captured
+    if (navigation) {
+      response.navigation = navigationData;
     }
 
     return res.status(200).json(response);

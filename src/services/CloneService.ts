@@ -181,6 +181,32 @@ export class CloneService {
           }
 
           console.log(`Style analysis complete: ${styleAnalysisResult.styleAnalysis.colors.totalUnique} colors, ${styleAnalysisResult.styleAnalysis.typography.totalFonts} fonts`);
+        } else if (options.captureNavigation) {
+          // Use navigation detection if enabled (Phase 6)
+          console.log('startAnalysis: Navigation detection ENABLED');
+          project.currentStep = 'Detecting navigation';
+          options.onProgress?.(15, 'Detecting navigation');
+
+          const navigationResult = await browserService.captureWithNavigation(options.source);
+          html = navigationResult.html;
+
+          // Store navigation data in project metadata
+          if (project.metadata) {
+            project.metadata.navigationData = {
+              totalNavigations: navigationResult.navigation.totalNavigations,
+              byType: navigationResult.navigation.byType,
+              byMethod: navigationResult.navigation.byMethod,
+              components: navigationResult.navigation.components.map((comp) => ({
+                selector: comp.selector,
+                type: comp.properties.type,
+                confidence: comp.properties.confidence,
+                linkCount: comp.properties.linkCount,
+                detectionMethod: comp.detectionMethod,
+              })),
+            };
+          }
+
+          console.log(`Navigation detection complete: ${navigationResult.navigation.totalNavigations} navigations detected`);
         } else {
           const captureResult = await browserService.capturePage(options.source);
           html = captureResult.html;
