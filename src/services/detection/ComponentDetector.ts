@@ -1,6 +1,7 @@
 import * as cheerio from 'cheerio';
 import { NavigationDetector, NavigationComponent } from '../NavigationDetector';
 import { EmbedDetector, EmbedComponent } from '../EmbedDetector';
+import { InteractivePatternDetector, InteractiveComponent } from '../InteractivePatternDetector';
 
 export interface DetectedComponent {
   id: string;
@@ -26,11 +27,13 @@ export interface DetectionResult {
   };
   navigation?: NavigationComponent[];
   embeds?: EmbedComponent[];
+  interactive?: InteractiveComponent[];
 }
 
 export class ComponentDetector {
   private navigationDetector = new NavigationDetector();
   private embedDetector = new EmbedDetector();
+  private interactiveDetector = new InteractivePatternDetector();
 
   private builderPatterns = {
     elementor: ['.elementor-element', '.elementor-widget', '[data-element_type]'],
@@ -100,7 +103,10 @@ export class ComponentDetector {
     // 4. Detect embeds (Phase 7)
     const embeds = this.embedDetector.detect($);
 
-    // 5. Calculate stats
+    // 5. Detect interactive patterns (Phase 8)
+    const interactive = this.interactiveDetector.detect($);
+
+    // 6. Calculate stats
     const stats = this.calculateStats(components);
 
     return {
@@ -109,6 +115,7 @@ export class ComponentDetector {
       confidence: builder ? 0.9 : 0.5,
       stats,
       embeds,
+      interactive,
     };
   }
 
