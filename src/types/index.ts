@@ -6,6 +6,7 @@ export interface CloneOptions {
   respectRobots?: boolean;
   includeAssets?: boolean;
   useBrowserAutomation?: boolean; // Enable Playwright for dynamic content
+  captureResponsive?: boolean; // Enable responsive breakpoint detection (Phase 2)
   onProgress?: (progress: number, step: string) => void;
 }
 
@@ -51,6 +52,11 @@ export interface WebsiteMetadata {
   totalSize: number;
   assetCount: number;
   pageCount: number;
+  responsiveData?: {
+    breakpoints: number;
+    mediaQueries: number;
+    responsivePercentage: number;
+  };
 }
 
 export interface PerformanceMetrics {

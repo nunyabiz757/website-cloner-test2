@@ -96,8 +96,29 @@ export class CloneService {
         project.currentStep = 'Loading website in browser';
         options.onProgress?.(10, 'Loading website in browser');
 
-        const captureResult = await browserService.capturePage(options.source);
-        html = captureResult.html;
+        // Use responsive capture if enabled (Phase 2)
+        if (options.captureResponsive) {
+          console.log('startAnalysis: Responsive capture ENABLED');
+          project.currentStep = 'Capturing responsive breakpoints';
+          options.onProgress?.(15, 'Capturing responsive breakpoints');
+
+          const responsiveCaptureResult = await browserService.captureResponsive(options.source);
+          html = responsiveCaptureResult.html;
+
+          // Store responsive data in project metadata
+          if (project.metadata) {
+            project.metadata.responsiveData = {
+              breakpoints: responsiveCaptureResult.responsiveStyles.length,
+              mediaQueries: responsiveCaptureResult.mediaQueries.length,
+              responsivePercentage: 0, // Will be calculated by ResponsiveAnalyzer
+            };
+          }
+
+          console.log(`Responsive capture complete: ${responsiveCaptureResult.responsiveStyles.length} breakpoints, ${responsiveCaptureResult.mediaQueries.length} media queries`);
+        } else {
+          const captureResult = await browserService.capturePage(options.source);
+          html = captureResult.html;
+        }
         console.log('startAnalysis: Browser capture complete - HTML length:', html.length);
         console.log('startAnalysis: Resources captured:', {
           images: captureResult.resources.images.length,

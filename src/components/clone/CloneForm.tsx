@@ -13,6 +13,7 @@ export interface CloneOptions {
   generateSitemap: boolean;
   exportToWordPress: boolean;
   useBrowserAutomation: boolean;
+  captureResponsive: boolean;
 }
 
 interface CloneFormProps {
@@ -34,6 +35,7 @@ export function CloneForm({ onSubmit, isLoading = false }: CloneFormProps) {
     generateSitemap: false,
     exportToWordPress: false,
     useBrowserAutomation: false,
+    captureResponsive: true,
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -61,6 +63,12 @@ export function CloneForm({ onSubmit, isLoading = false }: CloneFormProps) {
       label: '🚀 Browser Automation (Recommended)',
       description: 'Use Playwright to clone React/Vue/Angular apps with JavaScript execution',
       className: 'bg-green-50 hover:bg-green-100 border-2 border-green-300',
+    },
+    {
+      key: 'captureResponsive' as keyof CloneOptions,
+      label: '📱 Responsive Detection (Phase 2)',
+      description: 'Capture mobile, tablet & desktop breakpoints with media queries (+2-3 seconds)',
+      className: 'bg-purple-50 hover:bg-purple-100 border-2 border-purple-300',
     },
     {
       key: 'optimizeImages' as keyof CloneOptions,
