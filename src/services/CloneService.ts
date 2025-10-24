@@ -159,6 +159,28 @@ export class CloneService {
           }
 
           console.log(`Animation capture complete: ${animationCaptureResult.animations.totalAnimatedElements} animated, ${animationCaptureResult.animations.keyframes.length} keyframes`);
+        } else if (options.captureStyleAnalysis) {
+          // Use style analysis if enabled (Phase 5)
+          console.log('startAnalysis: Style analysis ENABLED');
+          project.currentStep = 'Analyzing styles';
+          options.onProgress?.(15, 'Analyzing styles');
+
+          const styleAnalysisResult = await browserService.captureWithStyleAnalysis(options.source);
+          html = styleAnalysisResult.html;
+
+          // Store style analysis data in project metadata
+          if (project.metadata) {
+            project.metadata.styleAnalysisData = {
+              totalColors: styleAnalysisResult.styleAnalysis.colors.totalUnique,
+              primaryColors: styleAnalysisResult.styleAnalysis.colors.mostUsed,
+              totalFonts: styleAnalysisResult.styleAnalysis.typography.totalFonts,
+              elementsWithShadows: styleAnalysisResult.styleAnalysis.visual.elementsWithShadows,
+              elementsWithFilters: styleAnalysisResult.styleAnalysis.visual.elementsWithFilters,
+              maxZIndex: styleAnalysisResult.styleAnalysis.visual.maxZIndex,
+            };
+          }
+
+          console.log(`Style analysis complete: ${styleAnalysisResult.styleAnalysis.colors.totalUnique} colors, ${styleAnalysisResult.styleAnalysis.typography.totalFonts} fonts`);
         } else {
           const captureResult = await browserService.capturePage(options.source);
           html = captureResult.html;

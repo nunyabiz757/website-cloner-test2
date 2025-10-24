@@ -20,7 +20,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { url, responsive = false, interactive = false, animations = false, breakpoints = DEFAULT_BREAKPOINTS } = req.body;
+  const { url, responsive = false, interactive = false, animations = false, styleAnalysis = false, breakpoints = DEFAULT_BREAKPOINTS } = req.body;
 
   if (!url) {
     return res.status(400).json({ error: 'URL is required' });
@@ -521,6 +521,201 @@ export default async function handler(req, res) {
       console.log(`🔑 Keyframes: ${animationData.keyframes.length}`);
     }
 
+    // If style analysis is enabled, extract colors, typography, and visual effects
+    let styleAnalysisData = null;
+
+    if (styleAnalysis) {
+      console.log('🎨 Starting advanced style analysis...');
+
+      const analysisResult = await page.evaluate(() => {
+        // Helper function to normalize colors to HEX
+        const rgbToHex = (rgb) => {
+          const match = rgb.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+          if (match) {
+            const r = parseInt(match[1]);
+            const g = parseInt(match[2]);
+            const b = parseInt(match[3]);
+            return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase()}`;
+          }
+          return rgb;
+        };
+
+        const normalizeColor = (color) => {
+          if (!color || color === 'transparent' || color === 'inherit') return color;
+          if (color.startsWith('#')) return color.toUpperCase();
+          if (color.startsWith('rgb')) return rgbToHex(color);
+          return color;
+        };
+
+        // Extract color palette
+        const elements = Array.from(document.querySelectorAll('*'));
+        const backgrounds = [];
+        const textColors = [];
+        const borderColors = [];
+        const allColors = new Set();
+
+        elements.forEach((el) => {
+          const computed = window.getComputedStyle(el);
+
+          const bg = normalizeColor(computed.backgroundColor);
+          if (bg && bg !== 'transparent') {
+            backgrounds.push(bg);
+            allColors.add(bg);
+          }
+
+          const text = normalizeColor(computed.color);
+          if (text) {
+            textColors.push(text);
+            allColors.add(text);
+          }
+
+          const border = normalizeColor(computed.borderColor);
+          if (border && border !== 'transparent') {
+            borderColors.push(border);
+            allColors.add(border);
+          }
+        });
+
+        // Find most used colors
+        const colorCounts = new Map();
+        [...backgrounds, ...textColors].forEach((color) => {
+          colorCounts.set(color, (colorCounts.get(color) || 0) + 1);
+        });
+
+        const mostUsed = Array.from(colorCounts.entries())
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 5)
+          .map(([color]) => color);
+
+        // Extract typography scale
+        const typographyScale = {};
+        ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'].forEach((tag) => {
+          const element = document.querySelector(tag);
+          if (element) {
+            const computed = window.getComputedStyle(element);
+            typographyScale[tag] = computed.fontSize;
+          }
+        });
+
+        const body = document.querySelector('body');
+        if (body) {
+          typographyScale.body = window.getComputedStyle(body).fontSize;
+        }
+
+        // Count visual effects
+        let elementsWithShadows = 0;
+        let elementsWithFilters = 0;
+        let elementsWithTransforms = 0;
+        let maxZIndex = 0;
+
+        elements.forEach((el) => {
+          const computed = window.getComputedStyle(el);
+
+          if (computed.boxShadow && computed.boxShadow !== 'none') {
+            elementsWithShadows++;
+          }
+
+          if (computed.filter && computed.filter !== 'none') {
+            elementsWithFilters++;
+          }
+
+          if (computed.transform && computed.transform !== 'none') {
+            elementsWithTransforms++;
+          }
+
+          const zIndex = parseInt(computed.zIndex);
+          if (!isNaN(zIndex) && zIndex > maxZIndex) {
+            maxZIndex = zIndex;
+          }
+        });
+
+        return {
+          colors: {
+            palette: {
+              primary: mostUsed.slice(0, 5),
+              backgrounds: [...new Set(backgrounds)].slice(0, 10),
+              text: [...new Set(textColors)].slice(0, 10),
+              borders: [...new Set(borderColors)].slice(0, 10),
+              allColors: Array.from(allColors),
+            },
+            totalUnique: allColors.size,
+            mostUsed,
+          },
+          typography: {
+            scale: typographyScale,
+          },
+          visual: {
+            elementsWithShadows,
+            elementsWithFilters,
+            elementsWithTransforms,
+            maxZIndex,
+          },
+        };
+      });
+
+      // Extract @font-face rules from CSS
+      const cssText = await page.evaluate(() => {
+        let css = '';
+        try {
+          const styleSheets = Array.from(document.styleSheets);
+          styleSheets.forEach((sheet) => {
+            try {
+              const rules = Array.from(sheet.cssRules || sheet.rules);
+              rules.forEach((rule) => {
+                if (rule instanceof CSSFontFaceRule) {
+                  css += rule.cssText + '\n';
+                }
+              });
+            } catch (e) {
+              // CORS blocked
+            }
+          });
+        } catch (e) {
+          // Error
+        }
+        return css;
+      });
+
+      // Parse @font-face rules
+      const fonts = [];
+      const fontFaceRegex = /@font-face\s*\{([^}]+)\}/g;
+      let match;
+
+      while ((match = fontFaceRegex.exec(cssText)) !== null) {
+        const rules = match[1];
+
+        const familyMatch = rules.match(/font-family:\s*['"]?([^'";\n]+)['"]?/);
+        const fontFamily = familyMatch ? familyMatch[1].trim() : '';
+
+        const srcMatches = rules.matchAll(/url\(['"]?([^'")\n]+)['"]?\)/g);
+        const src = Array.from(srcMatches).map((m) => m[1]);
+
+        const weightMatch = rules.match(/font-weight:\s*(\d+|normal|bold)/);
+        const fontWeight = weightMatch ? weightMatch[1] : undefined;
+
+        const styleMatch = rules.match(/font-style:\s*(normal|italic|oblique)/);
+        const fontStyle = styleMatch ? styleMatch[1] : undefined;
+
+        if (fontFamily && src.length > 0) {
+          fonts.push({
+            fontFamily,
+            src,
+            fontWeight,
+            fontStyle,
+          });
+        }
+      }
+
+      analysisResult.typography.fonts = fonts;
+      analysisResult.typography.totalFonts = fonts.length;
+
+      styleAnalysisData = analysisResult;
+      console.log(`✅ Style analysis complete`);
+      console.log(`🎨 Colors: ${styleAnalysisData.colors.totalUnique} unique`);
+      console.log(`📝 Fonts: ${styleAnalysisData.typography.totalFonts}`);
+      console.log(`✨ Shadows: ${styleAnalysisData.visual.elementsWithShadows}`);
+    }
+
     await browser.close();
 
     const response = {
@@ -546,6 +741,11 @@ export default async function handler(req, res) {
     // Add animation data if captured
     if (animations) {
       response.animations = animationData;
+    }
+
+    // Add style analysis if captured
+    if (styleAnalysis) {
+      response.styleAnalysis = styleAnalysisData;
     }
 
     return res.status(200).json(response);

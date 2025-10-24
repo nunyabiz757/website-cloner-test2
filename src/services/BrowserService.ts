@@ -98,6 +98,38 @@ export interface AnimationCaptureResult extends CaptureResult {
   animations: AnimationReport;
 }
 
+export interface StyleAnalysisResult extends CaptureResult {
+  styleAnalysis: {
+    colors: {
+      palette: {
+        primary: string[];
+        backgrounds: string[];
+        text: string[];
+        borders: string[];
+        allColors: string[];
+      };
+      totalUnique: number;
+      mostUsed: string[];
+    };
+    typography: {
+      fonts: Array<{
+        fontFamily: string;
+        src: string[];
+        fontWeight?: string;
+        fontStyle?: string;
+      }>;
+      scale: Record<string, string>;
+      totalFonts: number;
+    };
+    visual: {
+      elementsWithShadows: number;
+      elementsWithFilters: number;
+      elementsWithTransforms: number;
+      maxZIndex: number;
+    };
+  };
+}
+
 export class BrowserService {
   /**
    * Check if browser automation is available
@@ -276,6 +308,47 @@ export class BrowserService {
       console.error('❌ Failed to detect animations:', error);
       throw new Error(
         `Animation detection failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    }
+  }
+
+  /**
+   * Capture page with advanced style analysis (colors, typography, visual effects)
+   */
+  async captureWithStyleAnalysis(url: string): Promise<StyleAnalysisResult> {
+    console.log(`🎨 Requesting style analysis for ${url} via API...`);
+
+    try {
+      const apiUrl = '/api/capture';
+
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          url,
+          styleAnalysis: true,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(errorData.error || `API request failed with status ${response.status}`);
+      }
+
+      const result: StyleAnalysisResult = await response.json();
+
+      console.log('✅ Style analysis completed');
+      console.log(`🎨 Colors: ${result.styleAnalysis.colors.totalUnique} unique`);
+      console.log(`📝 Fonts: ${result.styleAnalysis.typography.totalFonts}`);
+      console.log(`✨ Shadows: ${result.styleAnalysis.visual.elementsWithShadows}`);
+
+      return result;
+    } catch (error) {
+      console.error('❌ Failed to analyze styles:', error);
+      throw new Error(
+        `Style analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`
       );
     }
   }

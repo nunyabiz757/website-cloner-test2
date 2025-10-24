@@ -9,6 +9,7 @@ export interface CloneOptions {
   captureResponsive?: boolean; // Enable responsive breakpoint detection (Phase 2)
   captureInteractive?: boolean; // Enable interactive state detection (Phase 3)
   captureAnimations?: boolean; // Enable animation detection (Phase 4)
+  captureStyleAnalysis?: boolean; // Enable advanced style analysis (Phase 5)
   onProgress?: (progress: number, step: string) => void;
 }
 
@@ -72,6 +73,14 @@ export interface WebsiteMetadata {
     withTransitions: number;
     withTransforms: number;
     keyframes: number;
+  };
+  styleAnalysisData?: {
+    totalColors: number;
+    primaryColors: string[];
+    totalFonts: number;
+    elementsWithShadows: number;
+    elementsWithFilters: number;
+    maxZIndex: number;
   };
 }
 
