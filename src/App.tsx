@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { Navbar } from './components/layout/Navbar';
+import { DashboardNav } from './components/layout/DashboardNav';
 import { Footer } from './components/layout/Footer';
 import { ProtectedRoute } from './components/security/ProtectedRoute';
 
@@ -27,6 +28,7 @@ function App() {
       <AuthProvider>
         <div className="min-h-screen flex flex-col">
           <Navbar />
+          <DashboardNav />
           <main className="flex-1">
             <Routes>
               {/* Public Routes */}
