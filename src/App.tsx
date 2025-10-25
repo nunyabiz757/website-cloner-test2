@@ -136,6 +136,14 @@ function App() {
                 }
               />
               <Route
+                path="/ai-assistant"
+                element={
+                  <ProtectedRoute>
+                    <AIAssistantPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
                 path="/ghl-paste"
                 element={
                   <ProtectedRoute>
