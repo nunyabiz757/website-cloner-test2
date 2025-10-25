@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, BarChart3, Zap, Eye, Download, Sparkles, FolderKanban } from 'lucide-react';
+import { LayoutDashboard, BarChart3, Zap, Eye, Download, Sparkles, FolderKanban, Copy } from 'lucide-react';
 
 export function DashboardNav() {
   const location = useLocation();
@@ -12,10 +12,12 @@ export function DashboardNav() {
     location.pathname.startsWith('/preview') ||
     location.pathname.startsWith('/export') ||
     location.pathname.startsWith('/ai-assistant') ||
-    location.pathname.startsWith('/projects');
+    location.pathname.startsWith('/projects') ||
+    location.pathname.startsWith('/clone');
 
   const navItems = [
     { path: '/dashboard', label: 'Overview', icon: LayoutDashboard },
+    { path: '/clone', label: 'Clone', icon: Copy },
     { path: '/projects', label: 'Projects', icon: FolderKanban },
     { path: '/performance', label: 'Performance', icon: BarChart3 },
     { path: '/optimize', label: 'Optimize', icon: Zap },
