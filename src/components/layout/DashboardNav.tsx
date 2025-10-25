@@ -35,9 +35,9 @@ export function DashboardNav() {
   }
 
   return (
-    <div className="sticky top-16 z-40 bg-gradient-to-r from-gray-50 to-white border-b border-gray-200 shadow-sm">
+    <div className="sticky top-20 z-40 py-4">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <nav className="flex items-center justify-between py-4">
+        <nav className="bg-white/80 backdrop-blur-md shadow-lg rounded-2xl border border-gray-200/50 px-6 py-4 flex items-center justify-between">
           {/* Navigation Items */}
           <div className="flex items-center gap-2 flex-1 overflow-x-auto">
             {navItems.map((item) => {
@@ -77,3 +77,4 @@ export function DashboardNav() {
     </div>
   );
 }
+
