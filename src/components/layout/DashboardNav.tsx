@@ -16,6 +16,8 @@ export function DashboardNav() {
     location.pathname.startsWith('/ai-assistant') ||
     location.pathname.startsWith('/projects');
 
+  console.log('🔍 DashboardNav - Current path:', location.pathname, 'isDashboardPage:', isDashboardPage);
+
   const navItems = [
     { path: '/dashboard', label: 'Overview', icon: LayoutDashboard },
     { path: '/projects', label: 'Projects', icon: FolderKanban },
@@ -38,8 +40,8 @@ export function DashboardNav() {
 
   return (
     <>
-      {/* Floating Navigation Container */}
-      <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
+      {/* Floating Navigation Container - Desktop */}
+      <div className="hidden md:flex fixed bottom-6 right-6 z-50 flex-col items-end gap-3">
         {/* Navigation Buttons - shown when open */}
         <div
           className={`
