@@ -322,6 +322,26 @@ export function Dashboard({ initialUrl }: DashboardProps) {
 
               {/* Modal Content - Scrollable */}
               <div className="overflow-y-auto flex-1 px-4 sm:px-6 py-3 sm:py-4 scrollbar-thin scrollbar-thumb-purple-300 scrollbar-track-gray-100">
+                {/* Select All Button */}
+                <div className="mb-4 flex justify-end">
+                  <button
+                    onClick={() => {
+                      const allSelected = Object.values(cloneOptions).every(v => v);
+                      setCloneOptions({
+                        includeAssets: !allSelected,
+                        useBrowserAutomation: !allSelected,
+                        captureResponsive: !allSelected,
+                        captureInteractive: !allSelected,
+                        captureAnimations: !allSelected,
+                        captureStyleAnalysis: !allSelected,
+                        captureNavigation: !allSelected,
+                      });
+                    }}
+                    className="text-xs sm:text-sm text-purple-600 hover:text-purple-700 font-medium hover:underline transition-colors"
+                  >
+                    {Object.values(cloneOptions).every(v => v) ? 'Deselect All' : 'Select All'}
+                  </button>
+                </div>
                 <div className="grid grid-cols-1 gap-3 sm:gap-4">
                 <label className="flex items-start gap-2 sm:gap-3 cursor-pointer p-3 sm:p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors border border-purple-200">
                   <input
@@ -355,7 +375,7 @@ export function Dashboard({ initialUrl }: DashboardProps) {
                     className="w-4 h-4 sm:w-5 sm:h-5 mt-0.5 text-purple-600 rounded flex-shrink-0"
                   />
                   <div className="flex-1">
-                    <div className="text-xs sm:text-sm text-gray-900 font-medium mb-1">📱 Responsive Detection (Phase 2)</div>
+                    <div className="text-xs sm:text-sm text-gray-900 font-medium mb-1">📱 Responsive Detection</div>
                     <div className="text-[10px] sm:text-xs text-gray-600">Capture mobile, tablet & desktop breakpoints with media queries (+2-3 seconds)</div>
                   </div>
                 </label>
@@ -367,7 +387,7 @@ export function Dashboard({ initialUrl }: DashboardProps) {
                     className="w-4 h-4 sm:w-5 sm:h-5 mt-0.5 text-purple-600 rounded flex-shrink-0"
                   />
                   <div className="flex-1">
-                    <div className="text-xs sm:text-sm text-gray-900 font-medium mb-1">🎨 Interactive States (Phase 3)</div>
+                    <div className="text-xs sm:text-sm text-gray-900 font-medium mb-1">🎨 Interactive States</div>
                     <div className="text-[10px] sm:text-xs text-gray-600">Capture hover, focus, active effects and pseudo-elements (+1-2 seconds)</div>
                   </div>
                 </label>
@@ -379,7 +399,7 @@ export function Dashboard({ initialUrl }: DashboardProps) {
                     className="w-4 h-4 sm:w-5 sm:h-5 mt-0.5 text-purple-600 rounded flex-shrink-0"
                   />
                   <div className="flex-1">
-                    <div className="text-xs sm:text-sm text-gray-900 font-medium mb-1">🎬 Animation Detection (Phase 4)</div>
+                    <div className="text-xs sm:text-sm text-gray-900 font-medium mb-1">🎬 Animation Detection</div>
                     <div className="text-[10px] sm:text-xs text-gray-600">Detect CSS animations, transitions & keyframes (+1 second)</div>
                   </div>
                 </label>
@@ -391,7 +411,7 @@ export function Dashboard({ initialUrl }: DashboardProps) {
                     className="w-4 h-4 sm:w-5 sm:h-5 mt-0.5 text-purple-600 rounded flex-shrink-0"
                   />
                   <div className="flex-1">
-                    <div className="text-xs sm:text-sm text-gray-900 font-medium mb-1">🎨 Style Analysis (Phase 5)</div>
+                    <div className="text-xs sm:text-sm text-gray-900 font-medium mb-1">🎨 Style Analysis</div>
                     <div className="text-[10px] sm:text-xs text-gray-600">Extract color palette, typography scale & visual effects (+1 second)</div>
                   </div>
                 </label>
@@ -403,7 +423,7 @@ export function Dashboard({ initialUrl }: DashboardProps) {
                     className="w-4 h-4 sm:w-5 sm:h-5 mt-0.5 text-purple-600 rounded flex-shrink-0"
                   />
                   <div className="flex-1">
-                    <div className="text-xs sm:text-sm text-gray-900 font-medium mb-1">🧭 Navigation Detection (Phase 6)</div>
+                    <div className="text-xs sm:text-sm text-gray-900 font-medium mb-1">🧭 Navigation Detection</div>
                     <div className="text-[10px] sm:text-xs text-gray-600">Multi-level detection of navigation menus & components (+1 second)</div>
                   </div>
                 </label>

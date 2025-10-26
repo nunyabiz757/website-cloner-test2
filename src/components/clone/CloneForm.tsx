@@ -74,31 +74,31 @@ export function CloneForm({ onSubmit, isLoading = false }: CloneFormProps) {
     },
     {
       key: 'captureResponsive' as keyof CloneOptions,
-      label: '📱 Responsive Detection (Phase 2)',
+      label: '📱 Responsive Detection',
       description: 'Capture mobile, tablet & desktop breakpoints with media queries (+2-3 seconds)',
       className: 'bg-purple-50 hover:bg-purple-100 border-2 border-purple-300',
     },
     {
       key: 'captureInteractive' as keyof CloneOptions,
-      label: '🎨 Interactive States (Phase 3)',
+      label: '🎨 Interactive States',
       description: 'Capture hover, focus, active effects and pseudo-elements (+1-2 seconds)',
       className: 'bg-orange-50 hover:bg-orange-100 border-2 border-orange-300',
     },
     {
       key: 'captureAnimations' as keyof CloneOptions,
-      label: '🎬 Animation Detection (Phase 4)',
+      label: '🎬 Animation Detection',
       description: 'Detect CSS animations, transitions & keyframes (+1 second)',
       className: 'bg-blue-50 hover:bg-blue-100 border-2 border-blue-300',
     },
     {
       key: 'captureStyleAnalysis' as keyof CloneOptions,
-      label: '🎨 Style Analysis (Phase 5)',
+      label: '🎨 Style Analysis',
       description: 'Extract color palette, typography scale & visual effects (+1 second)',
       className: 'bg-indigo-50 hover:bg-indigo-100 border-2 border-indigo-300',
     },
     {
       key: 'captureNavigation' as keyof CloneOptions,
-      label: '🧭 Navigation Detection (Phase 6)',
+      label: '🧭 Navigation Detection',
       description: 'Multi-level detection of navigation menus & components (+1 second)',
       className: 'bg-teal-50 hover:bg-teal-100 border-2 border-teal-300',
     },
@@ -171,7 +171,24 @@ export function CloneForm({ onSubmit, isLoading = false }: CloneFormProps) {
 
       {/* Clone Options Section */}
       <div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Clone Options</h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">Clone Options</h3>
+          <button
+            type="button"
+            onClick={() => {
+              const allSelected = Object.values(options).every(v => v);
+              const newOptions = { ...options };
+              Object.keys(newOptions).forEach(key => {
+                newOptions[key as keyof CloneOptions] = !allSelected;
+              });
+              setOptions(newOptions);
+            }}
+            disabled={isLoading}
+            className="text-sm text-blue-600 hover:text-blue-700 font-medium hover:underline transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {Object.values(options).every(v => v) ? 'Deselect All' : 'Select All'}
+          </button>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {optionsConfig.map((option) => (
             <label
