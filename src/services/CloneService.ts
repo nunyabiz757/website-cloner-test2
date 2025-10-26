@@ -2,6 +2,9 @@ import type { CloneOptions, CloneProject, ClonedAsset, WebsiteMetadata } from '.
 import { loggingService } from './LoggingService';
 import { performanceService } from './PerformanceService';
 import { lighthouseService } from './LighthouseService';
+import { seoAnalysisService } from './SEOAnalysisService';
+import { securityScanService } from './SecurityScanService';
+import { technologyDetectionService } from './TechnologyDetectionService';
 import { supabase } from '../lib/supabase';
 import { validateURL } from '../utils/security/validator';
 import { sanitizeHTML } from '../utils/security/sanitizer';
@@ -309,38 +312,116 @@ export class CloneService {
         console.log('startAnalysis: Asset downloading SKIPPED (includeAssets is false)');
       }
 
-      console.log('startAnalysis: Step 9 - Analyzing performance');
-      project.progress = 75;
-      project.currentStep = 'Analyzing performance metrics';
+      // Step 9: Performance Analysis (if enabled)
+      if (options.performanceAnalysis !== false) {
+        console.log('startAnalysis: Step 9 - Analyzing performance');
+        project.progress = 75;
+        project.currentStep = 'Analyzing performance metrics';
 
-      const metrics = await performanceService.analyzePerformance(html, '', '', options.source);
-      project.originalScore = metrics.score;
-      project.metrics = metrics;
-      console.log('startAnalysis: Performance analyzed, score:', metrics.score);
+        const metrics = await performanceService.analyzePerformance(html, '', '', options.source);
+        project.originalScore = metrics.score;
+        project.metrics = metrics;
+        console.log('startAnalysis: Performance analyzed, score:', metrics.score);
 
-      console.log('startAnalysis: Step 10 - Running Lighthouse audit');
-      project.progress = 90;
-      project.currentStep = 'Running Lighthouse audit';
+        console.log('startAnalysis: Step 10 - Running Lighthouse audit');
+        project.progress = 80;
+        project.currentStep = 'Running Lighthouse audit';
 
-      try {
-        const lighthouseResults = await lighthouseService.runAuditWithRetry(options.source);
-        metrics.lighthouse = lighthouseResults;
-        project.originalScore = Math.round((metrics.score + lighthouseResults.performanceScore) / 2);
-        console.log('startAnalysis: Lighthouse completed, score:', lighthouseResults.performanceScore);
+        try {
+          const lighthouseResults = await lighthouseService.runAuditWithRetry(options.source);
+          metrics.lighthouse = lighthouseResults;
+          project.originalScore = Math.round((metrics.score + lighthouseResults.performanceScore) / 2);
+          console.log('startAnalysis: Lighthouse completed, score:', lighthouseResults.performanceScore);
 
-        loggingService.success('clone', `Lighthouse audit completed - Score: ${lighthouseResults.performanceScore}`, {
-          projectId,
-          lighthouseScore: lighthouseResults.performanceScore,
-        });
-      } catch (error) {
-        console.log('startAnalysis: Lighthouse failed, using custom metrics only');
-        loggingService.warning('clone', 'Lighthouse audit failed, continuing with custom metrics', {
-          projectId,
-          error: error instanceof Error ? error.message : 'Unknown error',
-        });
+          loggingService.success('clone', `Lighthouse audit completed - Score: ${lighthouseResults.performanceScore}`, {
+            projectId,
+            lighthouseScore: lighthouseResults.performanceScore,
+          });
+        } catch (error) {
+          console.log('startAnalysis: Lighthouse failed, using custom metrics only');
+          loggingService.warning('clone', 'Lighthouse audit failed, continuing with custom metrics', {
+            projectId,
+            error: error instanceof Error ? error.message : 'Unknown error',
+          });
+        }
+      } else {
+        console.log('startAnalysis: Performance analysis SKIPPED');
       }
 
-      console.log('startAnalysis: Step 11 - Saving project');
+      // Step 11: SEO Analysis (if enabled)
+      if (options.seoAnalysis) {
+        console.log('startAnalysis: Step 11 - Running SEO analysis');
+        project.progress = 85;
+        project.currentStep = 'Analyzing SEO';
+
+        try {
+          const seoResults = await seoAnalysisService.analyzeSEO(options.source, html);
+          project.seoAnalysis = seoResults;
+          console.log('startAnalysis: SEO analysis completed, score:', seoResults.score);
+
+          loggingService.success('clone', `SEO analysis completed - Score: ${seoResults.score}/100`, {
+            projectId,
+            seoScore: seoResults.score,
+          });
+        } catch (error) {
+          console.log('startAnalysis: SEO analysis failed');
+          loggingService.warning('clone', 'SEO analysis failed', {
+            projectId,
+            error: error instanceof Error ? error.message : 'Unknown error',
+          });
+        }
+      }
+
+      // Step 12: Security Scan (if enabled)
+      if (options.securityScan) {
+        console.log('startAnalysis: Step 12 - Running security scan');
+        project.progress = 90;
+        project.currentStep = 'Scanning security';
+
+        try {
+          const securityResults = await securityScanService.scanSecurity(options.source, html);
+          project.securityScan = securityResults;
+          console.log('startAnalysis: Security scan completed, score:', securityResults.score);
+
+          loggingService.success('clone', `Security scan completed - Score: ${securityResults.score}/100`, {
+            projectId,
+            securityScore: securityResults.score,
+          });
+        } catch (error) {
+          console.log('startAnalysis: Security scan failed');
+          loggingService.warning('clone', 'Security scan failed', {
+            projectId,
+            error: error instanceof Error ? error.message : 'Unknown error',
+          });
+        }
+      }
+
+      // Step 13: Technology Detection (if enabled)
+      if (options.technologyDetection) {
+        console.log('startAnalysis: Step 13 - Detecting technologies');
+        project.progress = 95;
+        project.currentStep = 'Detecting technologies';
+
+        try {
+          const techStack = await technologyDetectionService.detectTechnologies(options.source, html);
+          project.technologyStack = techStack;
+          const totalTech = Object.values(techStack).reduce((sum, arr) => sum + arr.length, 0);
+          console.log('startAnalysis: Technology detection completed, found:', totalTech, 'technologies');
+
+          loggingService.success('clone', `Technology detection completed - Found ${totalTech} technologies`, {
+            projectId,
+            totalTechnologies: totalTech,
+          });
+        } catch (error) {
+          console.log('startAnalysis: Technology detection failed');
+          loggingService.warning('clone', 'Technology detection failed', {
+            projectId,
+            error: error instanceof Error ? error.message : 'Unknown error',
+          });
+        }
+      }
+
+      console.log('startAnalysis: Step 14 - Saving project');
       project.progress = 100;
       project.currentStep = 'Analysis completed';
       project.status = 'completed';

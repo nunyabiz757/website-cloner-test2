@@ -100,6 +100,11 @@ export function Dashboard({ initialUrl }: DashboardProps) {
         captureAnimations: cloneChecked ? cloneOptions.captureAnimations : false,
         captureStyleAnalysis: cloneChecked ? cloneOptions.captureStyleAnalysis : false,
         captureNavigation: cloneChecked ? cloneOptions.captureNavigation : false,
+        // Pass analysis options
+        performanceAnalysis: performanceChecked,
+        seoAnalysis: seoChecked,
+        securityScan: securityChecked,
+        technologyDetection: technologyChecked,
         onProgress: (progress, step) => {
           console.log(`Analysis progress: ${progress}% - ${step}`);
         }

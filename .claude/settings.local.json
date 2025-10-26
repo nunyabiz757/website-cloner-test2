@@ -39,7 +39,8 @@
       "Bash(vercel:*)",
       "Bash(ls:*)",
       "Bash(npm test:*)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(railway status:*)"
     ],
     "deny": [],
     "ask": []

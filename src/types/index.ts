@@ -11,6 +11,10 @@ export interface CloneOptions {
   captureAnimations?: boolean; // Enable animation detection (Phase 4)
   captureStyleAnalysis?: boolean; // Enable advanced style analysis (Phase 5)
   captureNavigation?: boolean; // Enable navigation detection (Phase 6)
+  performanceAnalysis?: boolean; // Enable performance/Lighthouse analysis
+  seoAnalysis?: boolean; // Enable SEO analysis
+  securityScan?: boolean; // Enable security scan
+  technologyDetection?: boolean; // Enable technology stack detection
   onProgress?: (progress: number, step: string) => void;
 }
 
@@ -31,6 +35,9 @@ export interface CloneProject {
   archived?: boolean;
   metadata?: WebsiteMetadata;
   detection?: any; // Component detection results
+  seoAnalysis?: any; // SEO analysis results
+  securityScan?: any; // Security scan results
+  technologyStack?: any; // Technology detection results
 }
 
 export interface ClonedAsset {
