@@ -27,6 +27,22 @@ export function Dashboard({ initialUrl }: DashboardProps) {
   const [toast, setToast] = useState<{ show: boolean; title?: string; message: string; type: 'success' | 'info' | 'warning' | 'error' } | null>(null);
   const { addProject, projects, loadProjects, archiveProject, unarchiveProject, deleteProject, setCurrentProject } = useProjectStore();
 
+  // Clone checkbox states (3 different UI styles)
+  const [clone1Checked, setClone1Checked] = useState(false);
+  const [clone2Checked, setClone2Checked] = useState(false);
+  const [clone3Checked, setClone3Checked] = useState(false);
+
+  // Clone options for each checkbox
+  const [cloneOptions, setCloneOptions] = useState({
+    includeAssets: false,
+    useBrowserAutomation: false,
+    captureResponsive: false,
+    captureInteractive: false,
+    captureAnimations: false,
+    captureStyleAnalysis: false,
+    captureNavigation: false,
+  });
+
   useEffect(() => {
     loadProjects();
   }, [loadProjects]);
@@ -50,11 +66,20 @@ export function Dashboard({ initialUrl }: DashboardProps) {
       console.log('Starting full analysis and clone preparation for:', url);
       loggingService.info('analyze', `Starting full analysis for ${url}`);
 
+      // Check if any clone checkbox is selected
+      const isCloneMode = clone1Checked || clone2Checked || clone3Checked;
+
       const project = await cloneService.cloneWebsite({
         source: url,
         type: 'url',
-        includeAssets: true, // Include assets for full clone
-        useBrowserAutomation: true, // Use browser for dynamic content
+        // Use selected clone options if in clone mode, otherwise use defaults for analysis
+        includeAssets: isCloneMode ? cloneOptions.includeAssets : true,
+        useBrowserAutomation: isCloneMode ? cloneOptions.useBrowserAutomation : true,
+        captureResponsive: isCloneMode ? cloneOptions.captureResponsive : false,
+        captureInteractive: isCloneMode ? cloneOptions.captureInteractive : false,
+        captureAnimations: isCloneMode ? cloneOptions.captureAnimations : false,
+        captureStyleAnalysis: isCloneMode ? cloneOptions.captureStyleAnalysis : false,
+        captureNavigation: isCloneMode ? cloneOptions.captureNavigation : false,
         onProgress: (progress, step) => {
           console.log(`Analysis progress: ${progress}% - ${step}`);
         }
@@ -228,6 +253,186 @@ export function Dashboard({ initialUrl }: DashboardProps) {
 
         <Card className="mb-8 p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Analyze a Website</h2>
+
+          {/* Clone Checkboxes - 3 Different UI Styles */}
+          <div className="mb-4 flex gap-6">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={clone1Checked}
+                onChange={(e) => setClone1Checked(e.target.checked)}
+                className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+              />
+              <span className="text-sm font-medium text-gray-700">Clone 1 (Expanding Panel)</span>
+            </label>
+
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={clone2Checked}
+                onChange={(e) => setClone2Checked(e.target.checked)}
+                className="w-4 h-4 text-green-600 rounded focus:ring-2 focus:ring-green-500"
+              />
+              <span className="text-sm font-medium text-gray-700">Clone 2 (Accordion)</span>
+            </label>
+
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={clone3Checked}
+                onChange={(e) => setClone3Checked(e.target.checked)}
+                className="w-4 h-4 text-purple-600 rounded focus:ring-2 focus:ring-purple-500"
+              />
+              <span className="text-sm font-medium text-gray-700">Clone 3 (Modal)</span>
+            </label>
+          </div>
+
+          {/* Clone 1 - Expanding Panel (slides in directly below) */}
+          {clone1Checked && (
+            <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <h3 className="text-sm font-semibold text-blue-900 mb-3">Clone Options (Expanding Panel Style)</h3>
+              <div className="grid grid-cols-2 gap-3">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={cloneOptions.includeAssets}
+                    onChange={(e) => setCloneOptions({...cloneOptions, includeAssets: e.target.checked})}
+                    className="w-4 h-4 text-blue-600 rounded"
+                  />
+                  <span className="text-sm text-gray-700">Include Assets</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={cloneOptions.useBrowserAutomation}
+                    onChange={(e) => setCloneOptions({...cloneOptions, useBrowserAutomation: e.target.checked})}
+                    className="w-4 h-4 text-blue-600 rounded"
+                  />
+                  <span className="text-sm text-gray-700">Browser Automation</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={cloneOptions.captureResponsive}
+                    onChange={(e) => setCloneOptions({...cloneOptions, captureResponsive: e.target.checked})}
+                    className="w-4 h-4 text-blue-600 rounded"
+                  />
+                  <span className="text-sm text-gray-700">Capture Responsive</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={cloneOptions.captureInteractive}
+                    onChange={(e) => setCloneOptions({...cloneOptions, captureInteractive: e.target.checked})}
+                    className="w-4 h-4 text-blue-600 rounded"
+                  />
+                  <span className="text-sm text-gray-700">Capture Interactive States</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={cloneOptions.captureAnimations}
+                    onChange={(e) => setCloneOptions({...cloneOptions, captureAnimations: e.target.checked})}
+                    className="w-4 h-4 text-blue-600 rounded"
+                  />
+                  <span className="text-sm text-gray-700">Capture Animations</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={cloneOptions.captureStyleAnalysis}
+                    onChange={(e) => setCloneOptions({...cloneOptions, captureStyleAnalysis: e.target.checked})}
+                    className="w-4 h-4 text-blue-600 rounded"
+                  />
+                  <span className="text-sm text-gray-700">Capture Style Analysis</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={cloneOptions.captureNavigation}
+                    onChange={(e) => setCloneOptions({...cloneOptions, captureNavigation: e.target.checked})}
+                    className="w-4 h-4 text-blue-600 rounded"
+                  />
+                  <span className="text-sm text-gray-700">Capture Navigation</span>
+                </label>
+              </div>
+            </div>
+          )}
+
+          {/* Clone 2 - Dropdown Accordion (slides down with animation) */}
+          {clone2Checked && (
+            <div className="mb-4 overflow-hidden transition-all duration-300">
+              <div className="p-4 bg-green-50 border border-green-200 rounded-lg animate-slide-down">
+                <h3 className="text-sm font-semibold text-green-900 mb-3">Clone Options (Accordion Style)</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={cloneOptions.includeAssets}
+                      onChange={(e) => setCloneOptions({...cloneOptions, includeAssets: e.target.checked})}
+                      className="w-4 h-4 text-green-600 rounded"
+                    />
+                    <span className="text-sm text-gray-700">Include Assets</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={cloneOptions.useBrowserAutomation}
+                      onChange={(e) => setCloneOptions({...cloneOptions, useBrowserAutomation: e.target.checked})}
+                      className="w-4 h-4 text-green-600 rounded"
+                    />
+                    <span className="text-sm text-gray-700">Browser Automation</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={cloneOptions.captureResponsive}
+                      onChange={(e) => setCloneOptions({...cloneOptions, captureResponsive: e.target.checked})}
+                      className="w-4 h-4 text-green-600 rounded"
+                    />
+                    <span className="text-sm text-gray-700">Capture Responsive</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={cloneOptions.captureInteractive}
+                      onChange={(e) => setCloneOptions({...cloneOptions, captureInteractive: e.target.checked})}
+                      className="w-4 h-4 text-green-600 rounded"
+                    />
+                    <span className="text-sm text-gray-700">Capture Interactive States</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={cloneOptions.captureAnimations}
+                      onChange={(e) => setCloneOptions({...cloneOptions, captureAnimations: e.target.checked})}
+                      className="w-4 h-4 text-green-600 rounded"
+                    />
+                    <span className="text-sm text-gray-700">Capture Animations</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={cloneOptions.captureStyleAnalysis}
+                      onChange={(e) => setCloneOptions({...cloneOptions, captureStyleAnalysis: e.target.checked})}
+                      className="w-4 h-4 text-green-600 rounded"
+                    />
+                    <span className="text-sm text-gray-700">Capture Style Analysis</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={cloneOptions.captureNavigation}
+                      onChange={(e) => setCloneOptions({...cloneOptions, captureNavigation: e.target.checked})}
+                      className="w-4 h-4 text-green-600 rounded"
+                    />
+                    <span className="text-sm text-gray-700">Capture Navigation</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="flex gap-3">
             <div className="flex-1">
               <input
@@ -262,6 +467,98 @@ export function Dashboard({ initialUrl }: DashboardProps) {
             Get comprehensive performance analysis, Core Web Vitals, and technology detection
           </p>
         </Card>
+
+        {/* Clone 3 - Modal/Overlay Popup */}
+        {clone3Checked && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fade-in">
+            <div className="bg-white rounded-xl p-6 max-w-2xl w-full mx-4 shadow-2xl animate-scale-in">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-purple-900">Clone Options (Modal Style)</h3>
+                <button
+                  onClick={() => setClone3Checked(false)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <label className="flex items-center gap-2 cursor-pointer p-3 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={cloneOptions.includeAssets}
+                    onChange={(e) => setCloneOptions({...cloneOptions, includeAssets: e.target.checked})}
+                    className="w-4 h-4 text-purple-600 rounded"
+                  />
+                  <span className="text-sm text-gray-700 font-medium">Include Assets</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer p-3 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={cloneOptions.useBrowserAutomation}
+                    onChange={(e) => setCloneOptions({...cloneOptions, useBrowserAutomation: e.target.checked})}
+                    className="w-4 h-4 text-purple-600 rounded"
+                  />
+                  <span className="text-sm text-gray-700 font-medium">Browser Automation</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer p-3 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={cloneOptions.captureResponsive}
+                    onChange={(e) => setCloneOptions({...cloneOptions, captureResponsive: e.target.checked})}
+                    className="w-4 h-4 text-purple-600 rounded"
+                  />
+                  <span className="text-sm text-gray-700 font-medium">Capture Responsive</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer p-3 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={cloneOptions.captureInteractive}
+                    onChange={(e) => setCloneOptions({...cloneOptions, captureInteractive: e.target.checked})}
+                    className="w-4 h-4 text-purple-600 rounded"
+                  />
+                  <span className="text-sm text-gray-700 font-medium">Capture Interactive States</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer p-3 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={cloneOptions.captureAnimations}
+                    onChange={(e) => setCloneOptions({...cloneOptions, captureAnimations: e.target.checked})}
+                    className="w-4 h-4 text-purple-600 rounded"
+                  />
+                  <span className="text-sm text-gray-700 font-medium">Capture Animations</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer p-3 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={cloneOptions.captureStyleAnalysis}
+                    onChange={(e) => setCloneOptions({...cloneOptions, captureStyleAnalysis: e.target.checked})}
+                    className="w-4 h-4 text-purple-600 rounded"
+                  />
+                  <span className="text-sm text-gray-700 font-medium">Capture Style Analysis</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer p-3 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={cloneOptions.captureNavigation}
+                    onChange={(e) => setCloneOptions({...cloneOptions, captureNavigation: e.target.checked})}
+                    className="w-4 h-4 text-purple-600 rounded"
+                  />
+                  <span className="text-sm text-gray-700 font-medium">Capture Navigation</span>
+                </label>
+              </div>
+              <div className="mt-6 flex justify-end">
+                <Button
+                  onClick={() => setClone3Checked(false)}
+                  className="bg-purple-600 hover:bg-purple-700"
+                >
+                  Apply Options
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="mb-8">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h2>
