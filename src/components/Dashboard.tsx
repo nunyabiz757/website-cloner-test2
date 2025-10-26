@@ -47,13 +47,17 @@ export function Dashboard({ initialUrl }: DashboardProps) {
 
     try {
       setIsCloning(true);
-      console.log('Starting analysis for:', url);
-      loggingService.info('analyze', `Starting analysis for ${url}`);
+      console.log('Starting full analysis and clone preparation for:', url);
+      loggingService.info('analyze', `Starting full analysis for ${url}`);
 
       const project = await cloneService.cloneWebsite({
         source: url,
         type: 'url',
-        includeAssets: false,
+        includeAssets: true, // Include assets for full clone
+        useBrowserAutomation: true, // Use browser for dynamic content
+        onProgress: (progress, step) => {
+          console.log(`Analysis progress: ${progress}% - ${step}`);
+        }
       });
 
       console.log('Analysis completed, project:', project);

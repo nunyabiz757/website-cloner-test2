@@ -55,11 +55,34 @@ export function OptimizationPage() {
 
   if (!project && !projectId) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">No Project Selected</h2>
-          <p className="text-gray-600 mb-6">Please clone a website first to optimize it</p>
-          <Button onClick={() => navigate('/dashboard')}>Back to Dashboard</Button>
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Optimize Projects</h1>
+          <p className="text-gray-600 mb-8">Select a project to optimize</p>
+
+          {projects.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {projects.filter(p => p.status === 'completed').map((proj) => (
+                <div
+                  key={proj.id}
+                  onClick={() => navigate(`/optimize/${proj.id}`)}
+                  className="bg-white border border-gray-200 rounded-xl p-6 hover:border-green-500 hover:shadow-lg transition-all cursor-pointer"
+                >
+                  <h3 className="font-semibold text-gray-900 mb-2 truncate">{proj.source}</h3>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Score: {proj.originalScore || 'N/A'} • {new Date(proj.createdAt).toLocaleDateString()}
+                  </p>
+                  <Button size="sm" className="w-full">Optimize</Button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-16">
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">No projects yet</h3>
+              <p className="text-gray-600 mb-6">Analyze a website first to optimize it</p>
+              <Button onClick={() => navigate('/dashboard')}>Go to Dashboard</Button>
+            </div>
+          )}
         </div>
       </div>
     );
