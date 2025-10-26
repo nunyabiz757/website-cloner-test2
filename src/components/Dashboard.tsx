@@ -27,7 +27,11 @@ export function Dashboard({ initialUrl }: DashboardProps) {
   const [toast, setToast] = useState<{ show: boolean; title?: string; message: string; type: 'success' | 'info' | 'warning' | 'error' } | null>(null);
   const { addProject, projects, loadProjects, archiveProject, unarchiveProject, deleteProject, setCurrentProject } = useProjectStore();
 
-  // Clone checkbox state and options
+  // Analysis checkbox states
+  const [performanceChecked, setPerformanceChecked] = useState(true); // Default checked
+  const [seoChecked, setSeoChecked] = useState(false);
+  const [securityChecked, setSecurityChecked] = useState(false);
+  const [technologyChecked, setTechnologyChecked] = useState(false);
   const [cloneChecked, setCloneChecked] = useState(false);
 
   // Clone options
@@ -59,17 +63,38 @@ export function Dashboard({ initialUrl }: DashboardProps) {
       return;
     }
 
+    // Check if no analysis is selected
+    const noAnalysisSelected = !performanceChecked && !seoChecked && !securityChecked && !technologyChecked && !cloneChecked;
+
+    if (noAnalysisSelected) {
+      // Just save URL without analysis
+      setToast({
+        show: true,
+        title: 'Project Saved',
+        message: 'URL saved as a project. To get detailed analysis, please select one or more checkboxes above.',
+        type: 'info'
+      });
+      setUrl('');
+      return;
+    }
+
     try {
       setIsCloning(true);
-      console.log('Starting full analysis and clone preparation for:', url);
-      loggingService.info('analyze', `Starting full analysis for ${url}`);
+      console.log('Starting analysis for:', url);
+      loggingService.info('analyze', `Starting analysis for ${url}`, {
+        performance: performanceChecked,
+        seo: seoChecked,
+        security: securityChecked,
+        technology: technologyChecked,
+        clone: cloneChecked
+      });
 
       const project = await cloneService.cloneWebsite({
         source: url,
         type: 'url',
         // Use selected clone options if clone checkbox is selected, otherwise use defaults for analysis
-        includeAssets: cloneChecked ? cloneOptions.includeAssets : true,
-        useBrowserAutomation: cloneChecked ? cloneOptions.useBrowserAutomation : true,
+        includeAssets: cloneChecked ? cloneOptions.includeAssets : (performanceChecked || seoChecked || securityChecked || technologyChecked),
+        useBrowserAutomation: cloneChecked ? cloneOptions.useBrowserAutomation : (performanceChecked || seoChecked || securityChecked || technologyChecked),
         captureResponsive: cloneChecked ? cloneOptions.captureResponsive : false,
         captureInteractive: cloneChecked ? cloneOptions.captureInteractive : false,
         captureAnimations: cloneChecked ? cloneOptions.captureAnimations : false,
@@ -249,8 +274,48 @@ export function Dashboard({ initialUrl }: DashboardProps) {
         <Card className="mb-8 p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Analyze a Website</h2>
 
-          {/* Clone Checkbox */}
-          <div className="mb-4">
+          {/* Analysis Checkboxes */}
+          <div className="mb-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={performanceChecked}
+                onChange={(e) => setPerformanceChecked(e.target.checked)}
+                className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+              />
+              <span className="text-sm font-medium text-gray-700">⚡ Performance</span>
+            </label>
+
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={seoChecked}
+                onChange={(e) => setSeoChecked(e.target.checked)}
+                className="w-4 h-4 text-green-600 rounded focus:ring-2 focus:ring-green-500"
+              />
+              <span className="text-sm font-medium text-gray-700">📊 SEO</span>
+            </label>
+
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={securityChecked}
+                onChange={(e) => setSecurityChecked(e.target.checked)}
+                className="w-4 h-4 text-red-600 rounded focus:ring-2 focus:ring-red-500"
+              />
+              <span className="text-sm font-medium text-gray-700">🔒 Security</span>
+            </label>
+
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={technologyChecked}
+                onChange={(e) => setTechnologyChecked(e.target.checked)}
+                className="w-4 h-4 text-indigo-600 rounded focus:ring-2 focus:ring-indigo-500"
+              />
+              <span className="text-sm font-medium text-gray-700">🔍 Technology</span>
+            </label>
+
             <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
