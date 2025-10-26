@@ -299,10 +299,11 @@ export function Dashboard({ initialUrl }: DashboardProps) {
 
         {/* Clone Modal */}
         {cloneChecked && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fade-in">
-            <div className="bg-white rounded-xl p-6 max-w-3xl w-full mx-4 shadow-2xl animate-scale-in">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-semibold text-purple-900">Clone Options</h3>
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fade-in p-2 sm:p-4">
+            <div className="bg-white rounded-xl max-w-3xl w-full max-h-[90vh] sm:max-h-[85vh] shadow-2xl animate-scale-in flex flex-col">
+              {/* Modal Header - Fixed */}
+              <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200 flex-shrink-0">
+                <h3 className="text-lg sm:text-xl font-semibold text-purple-900">Clone Options</h3>
                 <button
                   onClick={() => setCloneChecked(false)}
                   className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -312,96 +313,102 @@ export function Dashboard({ initialUrl }: DashboardProps) {
                   </svg>
                 </button>
               </div>
-              <div className="grid grid-cols-1 gap-4">
-                <label className="flex items-start gap-3 cursor-pointer p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors border border-purple-200">
+
+              {/* Modal Content - Scrollable */}
+              <div className="overflow-y-auto flex-1 px-4 sm:px-6 py-3 sm:py-4 scrollbar-thin scrollbar-thumb-purple-300 scrollbar-track-gray-100">
+                <div className="grid grid-cols-1 gap-3 sm:gap-4">
+                <label className="flex items-start gap-2 sm:gap-3 cursor-pointer p-3 sm:p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors border border-purple-200">
                   <input
                     type="checkbox"
                     checked={cloneOptions.includeAssets}
                     onChange={(e) => setCloneOptions({...cloneOptions, includeAssets: e.target.checked})}
-                    className="w-5 h-5 mt-0.5 text-purple-600 rounded flex-shrink-0"
+                    className="w-4 h-4 sm:w-5 sm:h-5 mt-0.5 text-purple-600 rounded flex-shrink-0"
                   />
                   <div className="flex-1">
-                    <div className="text-sm text-gray-900 font-medium mb-1">📦 Include Assets</div>
-                    <div className="text-xs text-gray-600">Download and include all assets (images, CSS, JS)</div>
+                    <div className="text-xs sm:text-sm text-gray-900 font-medium mb-1">📦 Include Assets</div>
+                    <div className="text-[10px] sm:text-xs text-gray-600">Download and include all assets (images, CSS, JS)</div>
                   </div>
                 </label>
-                <label className="flex items-start gap-3 cursor-pointer p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors border border-purple-200">
+                <label className="flex items-start gap-2 sm:gap-3 cursor-pointer p-3 sm:p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors border border-purple-200">
                   <input
                     type="checkbox"
                     checked={cloneOptions.useBrowserAutomation}
                     onChange={(e) => setCloneOptions({...cloneOptions, useBrowserAutomation: e.target.checked})}
-                    className="w-5 h-5 mt-0.5 text-purple-600 rounded flex-shrink-0"
+                    className="w-4 h-4 sm:w-5 sm:h-5 mt-0.5 text-purple-600 rounded flex-shrink-0"
                   />
                   <div className="flex-1">
-                    <div className="text-sm text-gray-900 font-medium mb-1">🚀 Browser Automation (Recommended)</div>
-                    <div className="text-xs text-gray-600">Use Playwright to clone React/Vue/Angular apps with JavaScript execution</div>
+                    <div className="text-xs sm:text-sm text-gray-900 font-medium mb-1">🚀 Browser Automation (Recommended)</div>
+                    <div className="text-[10px] sm:text-xs text-gray-600">Use Playwright to clone React/Vue/Angular apps with JavaScript execution</div>
                   </div>
                 </label>
-                <label className="flex items-start gap-3 cursor-pointer p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors border border-purple-200">
+                <label className="flex items-start gap-2 sm:gap-3 cursor-pointer p-3 sm:p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors border border-purple-200">
                   <input
                     type="checkbox"
                     checked={cloneOptions.captureResponsive}
                     onChange={(e) => setCloneOptions({...cloneOptions, captureResponsive: e.target.checked})}
-                    className="w-5 h-5 mt-0.5 text-purple-600 rounded flex-shrink-0"
+                    className="w-4 h-4 sm:w-5 sm:h-5 mt-0.5 text-purple-600 rounded flex-shrink-0"
                   />
                   <div className="flex-1">
-                    <div className="text-sm text-gray-900 font-medium mb-1">📱 Responsive Detection (Phase 2)</div>
-                    <div className="text-xs text-gray-600">Capture mobile, tablet & desktop breakpoints with media queries (+2-3 seconds)</div>
+                    <div className="text-xs sm:text-sm text-gray-900 font-medium mb-1">📱 Responsive Detection (Phase 2)</div>
+                    <div className="text-[10px] sm:text-xs text-gray-600">Capture mobile, tablet & desktop breakpoints with media queries (+2-3 seconds)</div>
                   </div>
                 </label>
-                <label className="flex items-start gap-3 cursor-pointer p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors border border-purple-200">
+                <label className="flex items-start gap-2 sm:gap-3 cursor-pointer p-3 sm:p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors border border-purple-200">
                   <input
                     type="checkbox"
                     checked={cloneOptions.captureInteractive}
                     onChange={(e) => setCloneOptions({...cloneOptions, captureInteractive: e.target.checked})}
-                    className="w-5 h-5 mt-0.5 text-purple-600 rounded flex-shrink-0"
+                    className="w-4 h-4 sm:w-5 sm:h-5 mt-0.5 text-purple-600 rounded flex-shrink-0"
                   />
                   <div className="flex-1">
-                    <div className="text-sm text-gray-900 font-medium mb-1">🎨 Interactive States (Phase 3)</div>
-                    <div className="text-xs text-gray-600">Capture hover, focus, active effects and pseudo-elements (+1-2 seconds)</div>
+                    <div className="text-xs sm:text-sm text-gray-900 font-medium mb-1">🎨 Interactive States (Phase 3)</div>
+                    <div className="text-[10px] sm:text-xs text-gray-600">Capture hover, focus, active effects and pseudo-elements (+1-2 seconds)</div>
                   </div>
                 </label>
-                <label className="flex items-start gap-3 cursor-pointer p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors border border-purple-200">
+                <label className="flex items-start gap-2 sm:gap-3 cursor-pointer p-3 sm:p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors border border-purple-200">
                   <input
                     type="checkbox"
                     checked={cloneOptions.captureAnimations}
                     onChange={(e) => setCloneOptions({...cloneOptions, captureAnimations: e.target.checked})}
-                    className="w-5 h-5 mt-0.5 text-purple-600 rounded flex-shrink-0"
+                    className="w-4 h-4 sm:w-5 sm:h-5 mt-0.5 text-purple-600 rounded flex-shrink-0"
                   />
                   <div className="flex-1">
-                    <div className="text-sm text-gray-900 font-medium mb-1">🎬 Animation Detection (Phase 4)</div>
-                    <div className="text-xs text-gray-600">Detect CSS animations, transitions & keyframes (+1 second)</div>
+                    <div className="text-xs sm:text-sm text-gray-900 font-medium mb-1">🎬 Animation Detection (Phase 4)</div>
+                    <div className="text-[10px] sm:text-xs text-gray-600">Detect CSS animations, transitions & keyframes (+1 second)</div>
                   </div>
                 </label>
-                <label className="flex items-start gap-3 cursor-pointer p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors border border-purple-200">
+                <label className="flex items-start gap-2 sm:gap-3 cursor-pointer p-3 sm:p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors border border-purple-200">
                   <input
                     type="checkbox"
                     checked={cloneOptions.captureStyleAnalysis}
                     onChange={(e) => setCloneOptions({...cloneOptions, captureStyleAnalysis: e.target.checked})}
-                    className="w-5 h-5 mt-0.5 text-purple-600 rounded flex-shrink-0"
+                    className="w-4 h-4 sm:w-5 sm:h-5 mt-0.5 text-purple-600 rounded flex-shrink-0"
                   />
                   <div className="flex-1">
-                    <div className="text-sm text-gray-900 font-medium mb-1">🎨 Style Analysis (Phase 5)</div>
-                    <div className="text-xs text-gray-600">Extract color palette, typography scale & visual effects (+1 second)</div>
+                    <div className="text-xs sm:text-sm text-gray-900 font-medium mb-1">🎨 Style Analysis (Phase 5)</div>
+                    <div className="text-[10px] sm:text-xs text-gray-600">Extract color palette, typography scale & visual effects (+1 second)</div>
                   </div>
                 </label>
-                <label className="flex items-start gap-3 cursor-pointer p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors border border-purple-200">
+                <label className="flex items-start gap-2 sm:gap-3 cursor-pointer p-3 sm:p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors border border-purple-200">
                   <input
                     type="checkbox"
                     checked={cloneOptions.captureNavigation}
                     onChange={(e) => setCloneOptions({...cloneOptions, captureNavigation: e.target.checked})}
-                    className="w-5 h-5 mt-0.5 text-purple-600 rounded flex-shrink-0"
+                    className="w-4 h-4 sm:w-5 sm:h-5 mt-0.5 text-purple-600 rounded flex-shrink-0"
                   />
                   <div className="flex-1">
-                    <div className="text-sm text-gray-900 font-medium mb-1">🧭 Navigation Detection (Phase 6)</div>
-                    <div className="text-xs text-gray-600">Multi-level detection of navigation menus & components (+1 second)</div>
+                    <div className="text-xs sm:text-sm text-gray-900 font-medium mb-1">🧭 Navigation Detection (Phase 6)</div>
+                    <div className="text-[10px] sm:text-xs text-gray-600">Multi-level detection of navigation menus & components (+1 second)</div>
                   </div>
                 </label>
+                </div>
               </div>
-              <div className="mt-6 flex justify-end">
+
+              {/* Modal Footer - Fixed */}
+              <div className="px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-200 flex justify-end flex-shrink-0 bg-gray-50">
                 <Button
                   onClick={() => setCloneChecked(false)}
-                  className="bg-purple-600 hover:bg-purple-700"
+                  className="bg-purple-600 hover:bg-purple-700 text-sm sm:text-base"
                 >
                   Apply Options
                 </Button>
