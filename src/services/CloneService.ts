@@ -1171,6 +1171,10 @@ export class CloneService {
           metrics: project.metrics || {},
           assets: project.assets || [],
           metadata: project.metadata || {},
+          detection: project.detection || null,
+          seo_analysis: project.seoAnalysis || null,
+          security_scan: project.securityScan || null,
+          technology_stack: project.technologyStack || null,
           created_at: project.createdAt.toISOString(),
         });
 
@@ -1316,6 +1320,10 @@ export class CloneService {
       assets: row.assets,
       archived: row.archived || false,
       metadata: row.metadata,
+      detection: row.detection,
+      seoAnalysis: row.seo_analysis,
+      securityScan: row.security_scan,
+      technologyStack: row.technology_stack,
     };
   }
 }

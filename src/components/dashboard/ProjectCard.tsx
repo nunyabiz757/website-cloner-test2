@@ -1,5 +1,7 @@
 import { Button } from '../ui/Button';
+import { Badge } from '../ui/Badge';
 import { DetectionResult } from '../../services/detection/ComponentDetector';
+import { CheckCircle, Shield, Search, Cpu } from 'lucide-react';
 
 interface ProjectCardProps {
   project: {
@@ -11,6 +13,10 @@ interface ProjectCardProps {
     size?: number;
     thumbnail?: string;
     detection?: DetectionResult;
+    seoAnalysis?: { score: number };
+    securityScan?: { score: number };
+    technologyStack?: any;
+    originalScore?: number;
   };
   onView: () => void;
   onDownload: () => void;
@@ -113,10 +119,42 @@ export function ProjectCard({
 
         {/* Components Count (if detected) */}
         {project.detection && project.detection.components.length > 0 && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-2 mb-4">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-2 mb-3">
             <div className="text-sm text-blue-900">
               <span className="font-semibold">{project.detection.components.length}</span> components detected
             </div>
+          </div>
+        )}
+
+        {/* Analysis Badges */}
+        {(project.originalScore !== undefined || project.seoAnalysis || project.securityScan || project.technologyStack) && (
+          <div className="flex flex-wrap gap-2 mb-4">
+            {project.originalScore !== undefined && (
+              <Badge className={`flex items-center gap-1 ${project.originalScore >= 90 ? 'bg-purple-100 text-purple-700' : project.originalScore >= 70 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'}`}>
+                <CheckCircle size={12} />
+                <span className="text-xs font-semibold">Performance: {project.originalScore}</span>
+              </Badge>
+            )}
+            {project.seoAnalysis && (
+              <Badge className={`flex items-center gap-1 ${project.seoAnalysis.score >= 90 ? 'bg-green-100 text-green-700' : project.seoAnalysis.score >= 70 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'}`}>
+                <Search size={12} />
+                <span className="text-xs font-semibold">SEO: {project.seoAnalysis.score}</span>
+              </Badge>
+            )}
+            {project.securityScan && (
+              <Badge className={`flex items-center gap-1 ${project.securityScan.score >= 90 ? 'bg-green-100 text-green-700' : project.securityScan.score >= 70 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'}`}>
+                <Shield size={12} />
+                <span className="text-xs font-semibold">Security: {project.securityScan.score}</span>
+              </Badge>
+            )}
+            {project.technologyStack && (
+              <Badge className="flex items-center gap-1 bg-indigo-100 text-indigo-700">
+                <Cpu size={12} />
+                <span className="text-xs font-semibold">
+                  {Object.values(project.technologyStack).reduce((sum: number, arr: any) => sum + arr.length, 0)} techs
+                </span>
+              </Badge>
+            )}
           </div>
         )}
 
