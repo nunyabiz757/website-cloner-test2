@@ -299,8 +299,14 @@ export function Dashboard({ initialUrl }: DashboardProps) {
 
         {/* Clone Modal */}
         {cloneChecked && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fade-in p-2 sm:p-4">
-            <div className="bg-white rounded-xl max-w-3xl w-full max-h-[90vh] sm:max-h-[85vh] shadow-2xl animate-scale-in flex flex-col">
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fade-in p-2 sm:p-4"
+            onClick={() => setCloneChecked(false)}
+          >
+            <div
+              className="bg-white rounded-xl max-w-3xl w-full max-h-[90vh] sm:max-h-[85vh] shadow-2xl animate-scale-in flex flex-col"
+              onClick={(e) => e.stopPropagation()}
+            >
               {/* Modal Header - Fixed */}
               <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200 flex-shrink-0">
                 <h3 className="text-lg sm:text-xl font-semibold text-purple-900">Clone Options</h3>

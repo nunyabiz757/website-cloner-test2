@@ -197,19 +197,28 @@ export function ExportModal({ project, onClose }: ExportModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-auto shadow-2xl">
-        <div className="sticky top-0 bg-white border-b border-gray-200 p-6 flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-gray-900">Export Project</h2>
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-50"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] shadow-2xl flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Modal Header - Fixed */}
+        <div className="px-4 sm:px-6 py-3 sm:py-4 bg-white border-b border-gray-200 flex items-center justify-between flex-shrink-0">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Export Project</h2>
           <button
             onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
           >
-            <X size={24} />
+            <X size={20} className="sm:w-6 sm:h-6" />
           </button>
         </div>
 
-        <div className="p-6 space-y-6">
+        {/* Modal Content - Scrollable */}
+        <div className="overflow-y-auto flex-1 px-4 sm:px-6 py-4 sm:py-6">
+          <div className="space-y-4 sm:space-y-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-3">Choose export format</label>
             <div className="space-y-3">
@@ -369,13 +378,15 @@ export function ExportModal({ project, onClose }: ExportModalProps) {
               </div>
             </div>
           )}
+          </div>
         </div>
 
-        <div className="sticky bottom-0 bg-white border-t border-gray-200 p-6 flex gap-3">
-          <Button variant="ghost" onClick={onClose} disabled={isExporting} className="flex-1">
+        {/* Modal Footer - Fixed */}
+        <div className="px-4 sm:px-6 py-3 sm:py-4 bg-white border-t border-gray-200 flex gap-3 flex-shrink-0">
+          <Button variant="ghost" onClick={onClose} disabled={isExporting} className="flex-1 text-sm sm:text-base">
             Cancel
           </Button>
-          <Button onClick={handleExport} disabled={isExporting} className="flex-1">
+          <Button onClick={handleExport} disabled={isExporting} className="flex-1 text-sm sm:text-base">
             {isExporting ? (
               <>
                 <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />

@@ -79,12 +79,19 @@ export function LogViewer({ onClose }: LogViewerProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <Card className="w-full max-w-6xl max-h-[90vh] flex flex-col">
-        <div className="p-6 border-b border-gray-200 flex items-center justify-between">
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4"
+      onClick={onClose}
+    >
+      <Card
+        className="w-full max-w-6xl max-h-[90vh] flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Modal Header - Fixed */}
+        <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200 flex items-center justify-between flex-shrink-0">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Application Logs</h2>
-            <p className="text-sm text-gray-600 mt-1">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Application Logs</h2>
+            <p className="text-xs sm:text-sm text-gray-600 mt-1">
               Monitor errors and track system activity
             </p>
           </div>
@@ -93,7 +100,8 @@ export function LogViewer({ onClose }: LogViewerProps) {
           </Button>
         </div>
 
-        <div className="p-6 border-b border-gray-200 space-y-4">
+        {/* Filters Section - Fixed */}
+        <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200 space-y-3 sm:space-y-4 flex-shrink-0">
           <div className="flex flex-wrap gap-3">
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-gray-700">Level:</span>
@@ -166,7 +174,8 @@ export function LogViewer({ onClose }: LogViewerProps) {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6">
+        {/* Logs Content - Scrollable */}
+        <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-3 sm:py-4">
           {filteredLogs.length === 0 ? (
             <div className="text-center py-12">
               <Info size={48} className="mx-auto text-gray-400 mb-4" />
@@ -223,7 +232,8 @@ export function LogViewer({ onClose }: LogViewerProps) {
           )}
         </div>
 
-        <div className="p-4 border-t border-gray-200 bg-gray-50 text-center text-sm text-gray-600">
+        {/* Modal Footer - Fixed */}
+        <div className="px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-200 bg-gray-50 text-center text-xs sm:text-sm text-gray-600 flex-shrink-0">
           Showing {filteredLogs.length} of {logs.length} logs
         </div>
       </Card>
