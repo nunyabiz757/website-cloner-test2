@@ -1,11 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Alert } from '../components/ui/Alert';
+import { Button } from '../components/ui/Button';
 import { CloneForm, CloneOptions } from '../components/clone/CloneForm';
 import { CloneProgress } from '../components/clone/CloneProgress';
 import { ClonePreview } from '../components/clone/ClonePreview';
 import { CloneService } from '../services/CloneService';
 import { useProjectStore } from '../stores/projectStore';
+import type { CloneProject } from '../types';
 import JSZip from 'jszip';
 import { ThemeGenerator } from '../services/wordpress/ThemeGenerator';
 import { WXRExporter } from '../services/wordpress/WXRExporter';
@@ -24,11 +26,22 @@ interface CloneResult {
 
 export function Clone() {
   const navigate = useNavigate();
-  const { addProject } = useProjectStore();
+  const { addProject, currentProject, projects, loadProjects } = useProjectStore();
 
+  const [selectedProject, setSelectedProject] = useState<CloneProject | null>(currentProject);
+  const [showProjectSelector, setShowProjectSelector] = useState(!currentProject);
   const [phase, setPhase] = useState<Phase>('form');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Load projects on mount and set current project if available
+  useEffect(() => {
+    loadProjects();
+    if (currentProject) {
+      setSelectedProject(currentProject);
+      setShowProjectSelector(false);
+    }
+  }, [loadProjects, currentProject]);
 
   // Progress state
   const [progress, setProgress] = useState(0);
@@ -316,8 +329,77 @@ export function Clone() {
           </Alert>
         )}
 
+        {/* Project Selector (when accessed from navigation) */}
+        {showProjectSelector && phase === 'form' && (
+          <div className="bg-white border border-gray-200 rounded-xl p-8 mb-6">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Select a Project to Clone</h2>
+            <p className="text-gray-600 mb-6">
+              Choose an analyzed project below, or enter a new URL to clone
+            </p>
+
+            {projects.filter(p => p.status === 'completed').length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                {projects.filter(p => p.status === 'completed').map((proj) => (
+                  <div
+                    key={proj.id}
+                    onClick={() => {
+                      setSelectedProject(proj);
+                      setShowProjectSelector(false);
+                    }}
+                    className="bg-gray-50 border border-gray-200 rounded-lg p-4 hover:border-blue-500 hover:shadow-md transition-all cursor-pointer"
+                  >
+                    <h3 className="font-semibold text-gray-900 mb-2 truncate">{proj.source}</h3>
+                    <p className="text-sm text-gray-600 mb-3">
+                      Analyzed: {new Date(proj.createdAt).toLocaleDateString()}
+                    </p>
+                    <Button size="sm" className="w-full">Clone This Project</Button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 bg-gray-50 rounded-lg mb-6">
+                <p className="text-gray-600">No analyzed projects yet</p>
+              </div>
+            )}
+
+            <div className="text-center">
+              <Button
+                variant="outline"
+                onClick={() => setShowProjectSelector(false)}
+              >
+                Or Enter New URL Below
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Selected Project Info */}
+        {selectedProject && !showProjectSelector && phase === 'form' && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-blue-600 font-medium">Selected Project:</p>
+                <p className="text-gray-900 font-semibold">{selectedProject.source}</p>
+                <p className="text-sm text-gray-600">
+                  Score: {selectedProject.originalScore || 'N/A'} • Analyzed: {new Date(selectedProject.createdAt).toLocaleDateString()}
+                </p>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  setSelectedProject(null);
+                  setShowProjectSelector(true);
+                }}
+              >
+                Change
+              </Button>
+            </div>
+          </div>
+        )}
+
         {/* Phase 1: Form */}
-        {phase === 'form' && (
+        {phase === 'form' && !showProjectSelector && (
           <CloneForm onSubmit={handleFormSubmit} isLoading={loading} />
         )}
 
