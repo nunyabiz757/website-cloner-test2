@@ -27,34 +27,27 @@ export function Navbar() {
 
           {/* Navigation Links */}
           <div className="hidden md:flex items-center gap-6">
-            {user ? (
+            <Link
+              to={user ? "/dashboard" : "/"}
+              className="text-gray-700 hover:text-blue-600 transition-colors font-medium"
+            >
+              Home
+            </Link>
+            {user && (
               <>
                 <Link
-                  to="/dashboard"
+                  to="/documentation"
                   className="text-gray-700 hover:text-blue-600 transition-colors font-medium"
                 >
-                  Dashboard
+                  Documentation
                 </Link>
                 <Link
-                  to="/clone"
+                  to="/settings"
                   className="text-gray-700 hover:text-blue-600 transition-colors font-medium"
                 >
-                  Clone
-                </Link>
-                <Link
-                  to="/projects"
-                  className="text-gray-700 hover:text-blue-600 transition-colors font-medium"
-                >
-                  Projects
+                  Settings
                 </Link>
               </>
-            ) : (
-              <Link
-                to="/"
-                className="text-gray-700 hover:text-blue-600 transition-colors font-medium"
-              >
-                Home
-              </Link>
             )}
           </div>
 

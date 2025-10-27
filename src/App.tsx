@@ -22,6 +22,8 @@ import { AIAssistantPage } from './pages/AIAssistantPage';
 import { GHLPastePage } from './pages/GHLPastePage';
 import { GHLConverterPage } from './pages/GHLConverterPage';
 import { DetectionPage } from './pages/DetectionPage';
+import { DocumentationPage } from './pages/DocumentationPage';
+import { SettingsPage } from './pages/SettingsPage';
 
 function App() {
   return (
@@ -173,6 +175,22 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <DetectionPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/documentation"
+                element={
+                  <ProtectedRoute>
+                    <DocumentationPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/settings"
+                element={
+                  <ProtectedRoute>
+                    <SettingsPage />
                   </ProtectedRoute>
                 }
               />
