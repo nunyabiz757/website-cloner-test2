@@ -123,6 +123,14 @@ export class ComponentRecognizer {
       { componentType: 'code-block', patterns: { tagNames: ['pre', 'code'] }, confidence: 100, priority: 100 },
       { componentType: 'code-block', patterns: { tagNames: ['div'], classKeywords: ['code', 'code-block', 'highlight', 'syntax'] }, confidence: 85, priority: 85 },
 
+      // GOHIGHLEVEL (GHL) SPECIFIC PATTERNS
+      { componentType: 'ghl-form', patterns: { tagNames: ['form', 'div'], classKeywords: ['ghl-form', 'gf_', 'ghl_form', 'highlevel-form'] }, confidence: 95, priority: 95 },
+      { componentType: 'ghl-button', patterns: { tagNames: ['button', 'a'], classKeywords: ['ghl-button', 'ghl-btn', 'highlevel-button'] }, confidence: 90, priority: 90 },
+      { componentType: 'ghl-section', patterns: { tagNames: ['section', 'div'], classKeywords: ['ghl-section', 'highlevel-section', 'ghl-block'] }, confidence: 85, priority: 85 },
+      { componentType: 'ghl-custom-html', patterns: { tagNames: ['div'], classKeywords: ['ghl-custom', 'ghl-html', 'highlevel-custom'] }, confidence: 90, priority: 90 },
+      { componentType: 'ghl-calendar', patterns: { tagNames: ['div', 'iframe'], classKeywords: ['ghl-calendar', 'highlevel-calendar', 'appointment-calendar'] }, confidence: 90, priority: 90 },
+      { componentType: 'ghl-survey', patterns: { tagNames: ['form', 'div'], classKeywords: ['ghl-survey', 'highlevel-survey', 'ghl-questionnaire'] }, confidence: 85, priority: 85 },
+
       // ICON PATTERNS
       { componentType: 'icon', patterns: { tagNames: ['i', 'svg'], classKeywords: ['icon', 'fa', 'fas', 'far', 'fab'] }, confidence: 90, priority: 85 },
 

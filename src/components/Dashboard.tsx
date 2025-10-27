@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Globe, Zap, BarChart3, Download, FileText, Clock, CheckCircle, Terminal, Search, Archive, Trash2, Copy } from 'lucide-react';
+import { Globe, Zap, BarChart3, Download, FileText, Clock, CheckCircle, Terminal, Search, Archive, Trash2, Copy, Workflow } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from './ui/Button';
 import { Card } from './ui/Card';
@@ -166,6 +166,13 @@ export function Dashboard({ initialUrl }: DashboardProps) {
       description: 'Convert to Elementor, Gutenberg, or Divi',
       action: 'export',
       color: 'bg-orange-50 text-orange-600',
+    },
+    {
+      icon: Workflow,
+      title: 'GHL Funnel Builder',
+      description: 'Optimize HTML for GoHighLevel custom elements',
+      action: 'ghl-paste',
+      color: 'bg-indigo-50 text-indigo-600',
     },
   ];
 
@@ -522,6 +529,11 @@ export function Dashboard({ initialUrl }: DashboardProps) {
                 <Card
                   key={idx}
                   className="p-6 hover:shadow-lg transition-shadow cursor-pointer"
+                  onClick={() => {
+                    if (action.action === 'ghl-paste') {
+                      navigate('/ghl-paste');
+                    }
+                  }}
                 >
                   <div className={`w-12 h-12 ${action.color} rounded-lg flex items-center justify-center mb-4`}>
                     <Icon size={24} />

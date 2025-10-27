@@ -1,9 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Copy, CheckCircle, AlertCircle, Zap } from 'lucide-react';
+import { ArrowLeft, Copy, CheckCircle, AlertCircle, Zap, Save } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
+import { cloneService } from '../services/CloneService';
+import { loggingService } from '../services/LoggingService';
+import type { CloneProject } from '../types';
 
 export function GHLPastePage() {
   const navigate = useNavigate();
@@ -12,6 +15,9 @@ export function GHLPastePage() {
   const [converted, setConverted] = useState(false);
   const [ghlCode, setGhlCode] = useState('');
   const [copied, setCopied] = useState(false);
+  const [sourceUrl, setSourceUrl] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
 
   if (!user) {
     navigate('/auth');
@@ -22,12 +28,53 @@ export function GHLPastePage() {
     const optimizedHtml = optimizeForGHL(htmlInput);
     setGhlCode(optimizedHtml);
     setConverted(true);
+    setSaved(false); // Reset saved state when converting new code
   };
 
   const handleCopy = () => {
     navigator.clipboard.writeText(ghlCode);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleSaveProject = async () => {
+    if (!ghlCode || !converted) return;
+
+    try {
+      setIsSaving(true);
+      loggingService.info('ghl-paste', 'Saving GHL conversion as project');
+
+      const project: CloneProject = {
+        id: crypto.randomUUID(),
+        source: sourceUrl || 'Manual HTML Input',
+        type: 'ghl-conversion',
+        status: 'completed',
+        progress: 100,
+        currentStep: 'GHL Conversion Completed',
+        createdAt: new Date(),
+        originalHtml: htmlInput,
+        optimizedHtml: ghlCode,
+        metadata: {
+          title: sourceUrl ? new URL(sourceUrl).hostname : 'GHL Conversion',
+          framework: 'GoHighLevel',
+          responsive: true,
+          totalSize: new Blob([ghlCode]).size,
+          assetCount: 0,
+          pageCount: 1,
+        },
+      };
+
+      await cloneService.saveProject(project);
+      setSaved(true);
+      loggingService.success('ghl-paste', 'GHL conversion saved as project', { projectId: project.id });
+
+      setTimeout(() => setSaved(false), 3000);
+    } catch (error) {
+      loggingService.error('ghl-paste', 'Failed to save GHL conversion', error);
+      alert(`Failed to save project: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -53,11 +100,23 @@ export function GHLPastePage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           <Card>
             <h2 className="text-xl font-bold text-gray-900 mb-4">Your HTML Code</h2>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Source URL (Optional)
+              </label>
+              <input
+                type="url"
+                value={sourceUrl}
+                onChange={(e) => setSourceUrl(e.target.value)}
+                placeholder="https://example.com (helps identify the project later)"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
             <textarea
               value={htmlInput}
               onChange={(e) => setHtmlInput(e.target.value)}
               placeholder="Paste your HTML code here..."
-              className="w-full h-96 p-4 border border-gray-300 rounded-lg font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+              className="w-full h-80 p-4 border border-gray-300 rounded-lg font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
             />
             <div className="mt-4 flex gap-3">
               <Button
@@ -74,6 +133,8 @@ export function GHLPastePage() {
                   setHtmlInput('');
                   setConverted(false);
                   setGhlCode('');
+                  setSourceUrl('');
+                  setSaved(false);
                 }}
               >
                 Clear
@@ -85,23 +146,42 @@ export function GHLPastePage() {
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-gray-900">GHL-Optimized Code</h2>
               {converted && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleCopy}
-                >
-                  {copied ? (
-                    <>
-                      <CheckCircle size={16} className="mr-2" />
-                      Copied!
-                    </>
-                  ) : (
-                    <>
-                      <Copy size={16} className="mr-2" />
-                      Copy
-                    </>
-                  )}
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleCopy}
+                  >
+                    {copied ? (
+                      <>
+                        <CheckCircle size={16} className="mr-2" />
+                        Copied!
+                      </>
+                    ) : (
+                      <>
+                        <Copy size={16} className="mr-2" />
+                        Copy
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={handleSaveProject}
+                    disabled={isSaving}
+                  >
+                    {saved ? (
+                      <>
+                        <CheckCircle size={16} className="mr-2" />
+                        Saved!
+                      </>
+                    ) : (
+                      <>
+                        <Save size={16} className="mr-2" />
+                        {isSaving ? 'Saving...' : 'Save as Project'}
+                      </>
+                    )}
+                  </Button>
+                </div>
               )}
             </div>
 

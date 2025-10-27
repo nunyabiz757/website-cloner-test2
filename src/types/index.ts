@@ -21,7 +21,7 @@ export interface CloneOptions {
 export interface CloneProject {
   id: string;
   source: string;
-  type: 'url' | 'upload';
+  type: 'url' | 'upload' | 'ghl-conversion';
   status: 'pending' | 'cloning' | 'analyzing' | 'optimizing' | 'completed' | 'error';
   progress: number;
   currentStep: string;
