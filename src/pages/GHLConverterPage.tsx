@@ -51,11 +51,33 @@ export function GHLConverterPage() {
 
       if (url.trim()) {
         loggingService.info('ghl-converter', `Fetching HTML from ${url}`);
-        const response = await fetch(`/api/fetch?url=${encodeURIComponent(url)}`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch URL');
+
+        // Use CORS proxy to fetch the URL
+        const corsProxy = 'https://api.allorigins.win/raw?url=';
+        const proxyUrl = `${corsProxy}${encodeURIComponent(url)}`;
+
+        try {
+          const response = await fetch(proxyUrl);
+          if (!response.ok) {
+            throw new Error(`Failed to fetch URL: ${response.statusText}`);
+          }
+          pageHTML = await response.text();
+          loggingService.success('ghl-converter', 'Successfully fetched HTML');
+        } catch (fetchError) {
+          loggingService.error('ghl-converter', 'Fetch failed, trying alternative method', fetchError);
+
+          // Fallback: Try direct fetch (may fail due to CORS)
+          try {
+            const directResponse = await fetch(url);
+            if (!directResponse.ok) {
+              throw new Error(`Failed to fetch URL: ${directResponse.statusText}`);
+            }
+            pageHTML = await directResponse.text();
+            loggingService.success('ghl-converter', 'Successfully fetched HTML (direct)');
+          } catch (directError) {
+            throw new Error('Failed to fetch URL. Please paste the HTML directly instead.');
+          }
         }
-        pageHTML = await response.text();
       }
 
       // Step 2: Detect WordPress
@@ -219,6 +241,9 @@ export function GHLConverterPage() {
                 placeholder="https://example.com"
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
+              <p className="text-xs text-gray-500 mt-2">
+                Note: If URL fetching fails due to CORS restrictions, you can paste the HTML directly below.
+              </p>
             </div>
 
             <div className="text-center text-gray-500 my-4">OR</div>
