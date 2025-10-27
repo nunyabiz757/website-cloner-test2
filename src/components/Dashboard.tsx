@@ -33,6 +33,7 @@ export function Dashboard({ initialUrl }: DashboardProps) {
   const [securityChecked, setSecurityChecked] = useState(false);
   const [technologyChecked, setTechnologyChecked] = useState(false);
   const [cloneChecked, setCloneChecked] = useState(false);
+  const [convertToGHLChecked, setConvertToGHLChecked] = useState(false);
 
   // Clone options
   const [cloneOptions, setCloneOptions] = useState({
@@ -63,6 +64,13 @@ export function Dashboard({ initialUrl }: DashboardProps) {
       return;
     }
 
+    // Check if Convert to GHL is selected - redirect to converter page
+    if (convertToGHLChecked) {
+      const encodedUrl = encodeURIComponent(url);
+      navigate(`/ghl-converter?url=${encodedUrl}`);
+      return;
+    }
+
     // Check if no analysis is selected
     const noAnalysisSelected = !performanceChecked && !seoChecked && !securityChecked && !technologyChecked && !cloneChecked;
 
@@ -86,7 +94,8 @@ export function Dashboard({ initialUrl }: DashboardProps) {
         seo: seoChecked,
         security: securityChecked,
         technology: technologyChecked,
-        clone: cloneChecked
+        clone: cloneChecked,
+        convertToGHL: convertToGHLChecked
       });
 
       const project = await cloneService.cloneWebsite({
@@ -287,7 +296,7 @@ export function Dashboard({ initialUrl }: DashboardProps) {
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Analyze a Website</h2>
 
           {/* Analysis Checkboxes */}
-          <div className="mb-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+          <div className="mb-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
             <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
@@ -336,6 +345,16 @@ export function Dashboard({ initialUrl }: DashboardProps) {
                 className="w-4 h-4 text-purple-600 rounded focus:ring-2 focus:ring-purple-500"
               />
               <span className="text-sm font-medium text-gray-700">Clone</span>
+            </label>
+
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={convertToGHLChecked}
+                onChange={(e) => setConvertToGHLChecked(e.target.checked)}
+                className="w-4 h-4 text-orange-600 rounded focus:ring-2 focus:ring-orange-500"
+              />
+              <span className="text-sm font-medium text-gray-700">🚀 Convert to GHL</span>
             </label>
           </div>
 

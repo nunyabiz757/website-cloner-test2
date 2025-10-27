@@ -20,6 +20,7 @@ import { OptimizationPage } from './pages/OptimizationPage';
 import { ExportPage } from './pages/ExportPage';
 import { AIAssistantPage } from './pages/AIAssistantPage';
 import { GHLPastePage } from './pages/GHLPastePage';
+import { GHLConverterPage } from './pages/GHLConverterPage';
 import { DetectionPage } from './pages/DetectionPage';
 
 function App() {
@@ -148,6 +149,22 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <GHLPastePage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/ghl-converter"
+                element={
+                  <ProtectedRoute>
+                    <GHLConverterPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/ghl-converter/:projectId"
+                element={
+                  <ProtectedRoute>
+                    <GHLConverterPage />
                   </ProtectedRoute>
                 }
               />
