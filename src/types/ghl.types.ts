@@ -66,3 +66,58 @@ export interface GHLSettings {
   preserveAnimations: boolean;
   optimizeImages: boolean;
 }
+
+// GHL-to-GHL Cloning Types
+export interface GHLLocation {
+  id: string;
+  name: string;
+  address?: string;
+  phone?: string;
+}
+
+export interface GHLWebsite {
+  id: string;
+  name: string;
+  url: string;
+  locationId: string;
+  pages: GHLPage[];
+}
+
+export interface GHLCloneScope {
+  type: 'single-page' | 'entire-funnel' | 'entire-website';
+  sourceUrl: string;
+}
+
+export interface GHLCloneDestination {
+  type: 'new-funnel' | 'existing-funnel' | 'new-website' | 'existing-website' | 'download-only';
+  locationId?: string;
+  funnelId?: string;
+  websiteId?: string;
+}
+
+export interface GHLCustomCode {
+  type: 'tracking-pixel' | 'custom-script' | 'head-code' | 'body-code' | 'footer-code';
+  code: string;
+  position: 'head' | 'body-start' | 'body-end';
+  description?: string;
+}
+
+export interface GHLCloneResult {
+  success: boolean;
+  sourceUrl: string;
+  cloneScope: GHLCloneScope['type'];
+  destination: GHLCloneDestination;
+  clonedPages: GHLPage[];
+  clonedFunnels?: GHLFunnel[];
+  clonedWebsites?: GHLWebsite[];
+  customCodes: GHLCustomCode[];
+  assets: GHLAsset[];
+  warnings: string[];
+  errors: string[];
+  stats: {
+    pagesCloned: number;
+    assetsCloned: number;
+    customCodesFound: number;
+    totalSize: number;
+  };
+}
