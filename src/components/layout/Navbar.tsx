@@ -1,7 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { Button } from '../ui/Button';
-import { ChevronDown, Home, Layers, BookOpen, Settings, LogIn, LogOut } from 'lucide-react';
+import { ChevronDown, Home, Layers, BookOpen, Settings, LogIn, LogOut, Copy, RefreshCw, Zap, Search, Shield, Cpu, Globe } from 'lucide-react';
 import { useState } from 'react';
 
 export function Navbar() {
@@ -15,14 +15,14 @@ export function Navbar() {
   };
 
   const features = [
-    { name: 'All Features', path: '/features' },
-    { name: 'Website Cloning', path: '/features/website-cloning' },
-    { name: 'WordPress to GHL', path: '/features/wordpress-to-ghl' },
-    { name: 'GHL to GHL Cloning', path: '/features/ghl-to-ghl' },
-    { name: 'Performance Optimization', path: '/features/performance-optimization' },
-    { name: 'SEO Analysis', path: '/features/seo-analysis' },
-    { name: 'Security Scanning', path: '/features/security-scanning' },
-    { name: 'Technology Detection', path: '/features/technology-detection' },
+    { name: 'Website Cloning', description: 'Clone any website instantly', path: '/features/website-cloning', icon: Copy, color: 'bg-blue-500' },
+    { name: 'WordPress to GHL', description: '11 page builders supported', path: '/features/wordpress-to-ghl', icon: RefreshCw, color: 'bg-purple-500' },
+    { name: 'GHL to GHL Cloning', description: 'Duplicate GHL funnels', path: '/features/ghl-to-ghl', icon: Globe, color: 'bg-indigo-500' },
+    { name: 'Performance Optimization', description: '20+ optimization techniques', path: '/features/performance-optimization', icon: Zap, color: 'bg-yellow-500' },
+    { name: 'SEO Analysis', description: 'Get comprehensive insights', path: '/features/seo-analysis', icon: Search, color: 'bg-green-500' },
+    { name: 'Security Scanning', description: 'Detect vulnerabilities', path: '/features/security-scanning', icon: Shield, color: 'bg-red-500' },
+    { name: 'Technology Detection', description: 'Identify tech stacks', path: '/features/technology-detection', icon: Cpu, color: 'bg-cyan-500' },
+    { name: 'View All Products', description: 'See all features', path: '/features', icon: Layers, color: 'bg-gray-500' },
   ];
 
   return (
@@ -64,18 +64,27 @@ export function Navbar() {
               </button>
 
               {showFeaturesDropdown && (
-                <div className="absolute top-full left-0 pt-2">
-                  <div className="w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2 max-h-96 overflow-y-auto">
-                    {features.map((feature) => (
-                      <Link
-                        key={feature.path}
-                        to={feature.path}
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
-                        onClick={() => setShowFeaturesDropdown(false)}
-                      >
-                        {feature.name}
-                      </Link>
-                    ))}
+                <div className="absolute top-full left-1/2 transform -translate-x-1/2 pt-2">
+                  <div className="bg-white rounded-lg shadow-xl border border-gray-200 p-6" style={{ width: '800px' }}>
+                    <div className="grid grid-cols-4 gap-4">
+                      {features.map((feature) => {
+                        const Icon = feature.icon;
+                        return (
+                          <Link
+                            key={feature.path}
+                            to={feature.path}
+                            className="group p-4 rounded-lg hover:bg-gray-50 transition-all duration-200 flex flex-col items-start"
+                            onClick={() => setShowFeaturesDropdown(false)}
+                          >
+                            <div className={`w-10 h-10 ${feature.color} rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-200`}>
+                              <Icon className="text-white" size={20} />
+                            </div>
+                            <h3 className="font-semibold text-sm text-gray-900 mb-1">{feature.name}</h3>
+                            <p className="text-xs text-gray-600">{feature.description}</p>
+                          </Link>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
               )}
