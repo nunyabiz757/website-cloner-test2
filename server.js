@@ -13,6 +13,33 @@ console.log('🚀 Starting Website Cloner Pro server...');
 console.log('📁 Working directory:', __dirname);
 console.log('📦 Dist directory:', join(__dirname, 'dist'));
 
+// CORS middleware - allow requests from Vercel frontend
+app.use((req, res, next) => {
+  const allowedOrigins = [
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'https://website-cloner-test2.vercel.app',
+    'https://website-cloner-test2-git-main-saas-projects-projects.vercel.app',
+    // Add any other Vercel deployment URLs
+  ];
+
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin) || origin?.includes('.vercel.app')) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+
+  // Handle preflight
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+
+  next();
+});
+
 // Parse JSON bodies
 app.use(express.json());
 
