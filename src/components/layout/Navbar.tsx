@@ -43,7 +43,7 @@ export function Navbar() {
           <div className="hidden md:flex items-center gap-3">
             <Link
               to={user ? "/dashboard" : "/"}
-              className="relative px-6 py-2.5 text-sm font-semibold text-white rounded-lg bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 transform hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg flex items-center gap-2"
+              className="relative px-6 py-2.5 text-sm font-semibold text-gray-700 rounded-lg bg-transparent hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-500 hover:text-white transform hover:scale-105 transition-all duration-200 hover:shadow-lg flex items-center gap-2"
             >
               <Home size={16} />
               Home
@@ -56,7 +56,7 @@ export function Navbar() {
               onMouseLeave={() => setShowFeaturesDropdown(false)}
             >
               <button
-                className="relative px-6 py-2.5 text-sm font-semibold text-white rounded-lg bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 transform hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg flex items-center gap-2"
+                className="relative px-6 py-2.5 text-sm font-semibold text-gray-700 rounded-lg bg-transparent hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-500 hover:text-white transform hover:scale-105 transition-all duration-200 hover:shadow-lg flex items-center gap-2"
               >
                 <Layers size={16} />
                 Features
@@ -83,7 +83,7 @@ export function Navbar() {
 
             <Link
               to="/documentation"
-              className="relative px-6 py-2.5 text-sm font-semibold text-white rounded-lg bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 transform hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg flex items-center gap-2"
+              className="relative px-6 py-2.5 text-sm font-semibold text-gray-700 rounded-lg bg-transparent hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-500 hover:text-white transform hover:scale-105 transition-all duration-200 hover:shadow-lg flex items-center gap-2"
             >
               <BookOpen size={16} />
               Documentation
@@ -91,7 +91,7 @@ export function Navbar() {
             {user && (
               <Link
                 to="/settings"
-                className="relative px-6 py-2.5 text-sm font-semibold text-white rounded-lg bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 transform hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg flex items-center gap-2"
+                className="relative px-6 py-2.5 text-sm font-semibold text-gray-700 rounded-lg bg-transparent hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-500 hover:text-white transform hover:scale-105 transition-all duration-200 hover:shadow-lg flex items-center gap-2"
               >
                 <Settings size={16} />
                 Settings
@@ -108,7 +108,7 @@ export function Navbar() {
                 </span>
                 <button
                   onClick={handleSignOut}
-                  className="relative px-6 py-2.5 text-sm font-semibold text-white rounded-lg bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 transform hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg flex items-center gap-2"
+                  className="relative px-6 py-2.5 text-sm font-semibold text-gray-700 rounded-lg bg-transparent hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-500 hover:text-white transform hover:scale-105 transition-all duration-200 hover:shadow-lg flex items-center gap-2"
                 >
                   <LogOut size={16} />
                   Sign Out
@@ -117,7 +117,7 @@ export function Navbar() {
             ) : (
               <button
                 onClick={() => navigate('/login')}
-                className="relative px-6 py-2.5 text-sm font-semibold text-white rounded-lg bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 transform hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg flex items-center gap-2"
+                className="relative px-6 py-2.5 text-sm font-semibold text-gray-700 rounded-lg bg-transparent hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-500 hover:text-white transform hover:scale-105 transition-all duration-200 hover:shadow-lg flex items-center gap-2"
               >
                 <LogIn size={16} />
                 Sign In
