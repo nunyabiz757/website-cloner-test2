@@ -178,14 +178,18 @@ export class BrowserService {
   }
 
   /**
-   * Navigate to URL and capture full rendered content using Vercel API
+   * Navigate to URL and capture full rendered content using Railway API
    */
   async capturePage(url: string): Promise<CaptureResult> {
-    console.log(`🌐 Requesting browser capture for ${url} via Vercel API...`);
+    console.log(`🌐 Requesting browser capture for ${url} via Railway API...`);
 
     try {
-      // Call Vercel serverless function
-      const apiUrl = '/api/capture';
+      // Call Railway API endpoint (Playwright runs on Railway, not Vercel)
+      const apiUrl = import.meta.env.VITE_RAILWAY_API_URL
+        ? `${import.meta.env.VITE_RAILWAY_API_URL}/api/capture`
+        : '/api/capture'; // Fallback for local development
+
+      console.log(`📡 Calling Railway API: ${apiUrl}`);
 
       const response = await fetch(apiUrl, {
         method: 'POST',
@@ -227,8 +231,10 @@ export class BrowserService {
     console.log(`📱 Requesting responsive capture for ${url} via API...`);
 
     try {
-      // Call API endpoint with responsive flag
-      const apiUrl = '/api/capture';
+      // Call Railway API endpoint with responsive flag
+      const apiUrl = import.meta.env.VITE_RAILWAY_API_URL
+        ? `${import.meta.env.VITE_RAILWAY_API_URL}/api/capture`
+        : '/api/capture';
 
       const response = await fetch(apiUrl, {
         method: 'POST',
@@ -269,7 +275,9 @@ export class BrowserService {
     console.log(`🎨 Requesting interactive state capture for ${url} via API...`);
 
     try {
-      const apiUrl = '/api/capture';
+      const apiUrl = import.meta.env.VITE_RAILWAY_API_URL
+        ? `${import.meta.env.VITE_RAILWAY_API_URL}/api/capture`
+        : '/api/capture';
 
       const response = await fetch(apiUrl, {
         method: 'POST',
@@ -309,7 +317,9 @@ export class BrowserService {
     console.log(`🎬 Requesting animation detection for ${url} via API...`);
 
     try {
-      const apiUrl = '/api/capture';
+      const apiUrl = import.meta.env.VITE_RAILWAY_API_URL
+        ? `${import.meta.env.VITE_RAILWAY_API_URL}/api/capture`
+        : '/api/capture';
 
       const response = await fetch(apiUrl, {
         method: 'POST',
@@ -349,7 +359,9 @@ export class BrowserService {
     console.log(`🎨 Requesting style analysis for ${url} via API...`);
 
     try {
-      const apiUrl = '/api/capture';
+      const apiUrl = import.meta.env.VITE_RAILWAY_API_URL
+        ? `${import.meta.env.VITE_RAILWAY_API_URL}/api/capture`
+        : '/api/capture';
 
       const response = await fetch(apiUrl, {
         method: 'POST',
@@ -390,7 +402,9 @@ export class BrowserService {
     console.log(`🧭 Requesting navigation detection for ${url} via API...`);
 
     try {
-      const apiUrl = '/api/capture';
+      const apiUrl = import.meta.env.VITE_RAILWAY_API_URL
+        ? `${import.meta.env.VITE_RAILWAY_API_URL}/api/capture`
+        : '/api/capture';
 
       const response = await fetch(apiUrl, {
         method: 'POST',
