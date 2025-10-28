@@ -54,24 +54,26 @@ export function Navbar() {
               onMouseLeave={() => setShowFeaturesDropdown(false)}
             >
               <button
-                className="flex items-center gap-1 text-gray-700 hover:text-blue-600 transition-colors font-medium"
+                className="flex items-center gap-1 text-gray-700 hover:text-blue-600 transition-colors font-medium py-2"
               >
                 Features
                 <ChevronDown size={16} className={`transition-transform ${showFeaturesDropdown ? 'rotate-180' : ''}`} />
               </button>
 
               {showFeaturesDropdown && (
-                <div className="absolute top-full left-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2">
-                  {features.map((feature) => (
-                    <Link
-                      key={feature.path}
-                      to={feature.path}
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
-                      onClick={() => setShowFeaturesDropdown(false)}
-                    >
-                      {feature.name}
-                    </Link>
-                  ))}
+                <div className="absolute top-full left-0 pt-2">
+                  <div className="w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2">
+                    {features.map((feature) => (
+                      <Link
+                        key={feature.path}
+                        to={feature.path}
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                        onClick={() => setShowFeaturesDropdown(false)}
+                      >
+                        {feature.name}
+                      </Link>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
