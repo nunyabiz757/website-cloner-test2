@@ -64,7 +64,7 @@ export function Navbar() {
 
               {showFeaturesDropdown && (
                 <div className="absolute top-full left-0 pt-2">
-                  <div className="w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2">
+                  <div className="w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2 max-h-96 overflow-y-auto">
                     {features.map((feature) => (
                       <Link
                         key={feature.path}
