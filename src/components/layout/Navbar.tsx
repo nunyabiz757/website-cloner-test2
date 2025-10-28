@@ -1,7 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { Button } from '../ui/Button';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Home, Layers, BookOpen, Settings } from 'lucide-react';
 import { useState } from 'react';
 
 export function Navbar() {
@@ -40,11 +40,12 @@ export function Navbar() {
           </Link>
 
           {/* Navigation Links */}
-          <div className="hidden md:flex items-center gap-6">
+          <div className="hidden md:flex items-center gap-3">
             <Link
               to={user ? "/dashboard" : "/"}
-              className="text-gray-700 hover:text-blue-600 transition-colors font-medium"
+              className="relative px-6 py-2.5 text-sm font-semibold text-white rounded-lg bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 transform hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg flex items-center gap-2"
             >
+              <Home size={16} />
               Home
             </Link>
 
@@ -55,8 +56,9 @@ export function Navbar() {
               onMouseLeave={() => setShowFeaturesDropdown(false)}
             >
               <button
-                className="flex items-center gap-1 text-gray-700 hover:text-blue-600 transition-colors font-medium py-2"
+                className="relative px-6 py-2.5 text-sm font-semibold text-white rounded-lg bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 transform hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg flex items-center gap-2"
               >
+                <Layers size={16} />
                 Features
                 <ChevronDown size={16} className={`transition-transform ${showFeaturesDropdown ? 'rotate-180' : ''}`} />
               </button>
@@ -81,15 +83,17 @@ export function Navbar() {
 
             <Link
               to="/documentation"
-              className="text-gray-700 hover:text-blue-600 transition-colors font-medium"
+              className="relative px-6 py-2.5 text-sm font-semibold text-white rounded-lg bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 transform hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg flex items-center gap-2"
             >
+              <BookOpen size={16} />
               Documentation
             </Link>
             {user && (
               <Link
                 to="/settings"
-                className="text-gray-700 hover:text-blue-600 transition-colors font-medium"
+                className="relative px-6 py-2.5 text-sm font-semibold text-white rounded-lg bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 transform hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg flex items-center gap-2"
               >
+                <Settings size={16} />
                 Settings
               </Link>
             )}
