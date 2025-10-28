@@ -29,7 +29,6 @@ import { SettingsPage } from './pages/SettingsPage';
 import { FeaturesPage } from './pages/FeaturesPage';
 import { WebsiteCloningFeature } from './pages/features/WebsiteCloningFeature';
 import { WordPressToGHLFeature } from './pages/features/WordPressToGHLFeature';
-import { WPToGHLConversionFeature } from './pages/features/WPToGHLConversionFeature';
 import { GHLToGHLFeature } from './pages/features/GHLToGHLFeature';
 import { PerformanceOptimizationFeature } from './pages/features/PerformanceOptimizationFeature';
 import { SEOAnalysisFeature } from './pages/features/SEOAnalysisFeature';
@@ -55,7 +54,6 @@ function App() {
               <Route path="/features" element={<FeaturesPage />} />
               <Route path="/features/website-cloning" element={<WebsiteCloningFeature />} />
               <Route path="/features/wordpress-to-ghl" element={<WordPressToGHLFeature />} />
-              <Route path="/features/wp-to-ghl-conversion" element={<WPToGHLConversionFeature />} />
               <Route path="/features/ghl-to-ghl" element={<GHLToGHLFeature />} />
               <Route path="/features/performance-optimization" element={<PerformanceOptimizationFeature />} />
               <Route path="/features/seo-analysis" element={<SEOAnalysisFeature />} />
