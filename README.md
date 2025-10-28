@@ -376,3 +376,4 @@ For issues, questions, or suggestions, please open an issue on GitHub.
 ---
 
 **Built with ❤️ using React, TypeScript, and modern web technologies**
+
