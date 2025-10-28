@@ -74,8 +74,19 @@ export default async function handler(req, res) {
       timeout: 60000,
     });
 
-    // Wait for lazy-loaded content
+    // Wait for lazy-loaded content and images
     await page.waitForTimeout(2000);
+
+    // Wait for images to fully load (especially logos)
+    await page.evaluate(() => {
+      return Promise.all(
+        Array.from(document.images)
+          .filter(img => !img.complete)
+          .map(img => new Promise(resolve => {
+            img.onload = img.onerror = resolve;
+          }))
+      );
+    });
 
     // Scroll to bottom to trigger lazy loading
     await page.evaluate(async () => {
@@ -98,8 +109,52 @@ export default async function handler(req, res) {
     // Scroll back to top
     await page.evaluate(() => window.scrollTo(0, 0));
 
-    // Extract HTML
-    const html = await page.content();
+    // Extract HTML with enhanced SVG and icon detection
+    const html = await page.evaluate(() => {
+      // Convert all SVGs to inline to preserve them
+      document.querySelectorAll('svg').forEach(svg => {
+        svg.setAttribute('data-svg-preserved', 'true');
+      });
+
+      // Mark all logo elements for better detection
+      const logoSelectors = [
+        'img[alt*="logo" i]',
+        'img[class*="logo" i]',
+        'img[id*="logo" i]',
+        'a[class*="logo" i] img',
+        '.header img',
+        '.navbar-brand img',
+        '.site-logo img',
+        'svg[class*="logo" i]',
+        'svg[id*="logo" i]'
+      ];
+
+      logoSelectors.forEach(selector => {
+        document.querySelectorAll(selector).forEach(el => {
+          el.setAttribute('data-detected-logo', 'true');
+        });
+      });
+
+      // Mark menu icons
+      const menuIconSelectors = [
+        '.menu-icon',
+        '.hamburger',
+        '[class*="menu-toggle"]',
+        '[class*="nav-toggle"]',
+        'button[aria-label*="menu" i]',
+        'button[aria-label*="navigation" i]',
+        '.mobile-menu-button',
+        '.navbar-toggler'
+      ];
+
+      menuIconSelectors.forEach(selector => {
+        document.querySelectorAll(selector).forEach(el => {
+          el.setAttribute('data-detected-menu-icon', 'true');
+        });
+      });
+
+      return document.documentElement.outerHTML;
+    });
 
     // Extract CSS
     const styles = await page.evaluate(() => {
@@ -136,10 +191,62 @@ export default async function handler(req, res) {
         .map((script) => script.src);
     });
 
+    // Extract background images (logos are often background images)
+    const backgroundImages = await page.evaluate(() => {
+      const bgImages = [];
+      const elements = document.querySelectorAll('*');
+
+      elements.forEach(el => {
+        const style = window.getComputedStyle(el);
+        const bgImage = style.backgroundImage;
+
+        if (bgImage && bgImage !== 'none') {
+          const urlMatch = bgImage.match(/url\(['"]?([^'"()]+)['"]?\)/g);
+          if (urlMatch) {
+            urlMatch.forEach(match => {
+              const url = match.replace(/url\(['"]?/, '').replace(/['"]?\)/, '');
+              bgImages.push({
+                url,
+                element: el.tagName,
+                classes: el.className
+              });
+            });
+          }
+        }
+      });
+
+      return bgImages;
+    });
+
+    // Detect icon fonts
+    const iconFonts = await page.evaluate(() => {
+      const fonts = new Set();
+      const elements = document.querySelectorAll('*');
+
+      elements.forEach(el => {
+        const style = window.getComputedStyle(el);
+        const fontFamily = style.fontFamily.toLowerCase();
+
+        // Check for common icon fonts
+        if (fontFamily.includes('fontawesome') ||
+            fontFamily.includes('material icons') ||
+            fontFamily.includes('icomoon') ||
+            fontFamily.includes('ionicons') ||
+            fontFamily.includes('linearicons') ||
+            el.classList.toString().match(/\b(fa|icon|material-icons|mi|ion)\b/i)) {
+          fonts.add(fontFamily);
+        }
+      });
+
+      return Array.from(fonts);
+    });
+
     console.log('✅ Page captured successfully');
     console.log(`📄 HTML length: ${html.length} chars`);
     console.log(`🎨 CSS length: ${styles.length} chars`);
     console.log(`📦 Resources: ${resources.images.length} images, ${resources.fonts.length} fonts`);
+    console.log(`🖼️  Background images: ${backgroundImages.length}`);
+    console.log(`🎭 Icon fonts detected: ${iconFonts.join(', ') || 'none'}`);
 
     // If responsive capture is enabled, capture additional breakpoints
     let responsiveStyles = [];
@@ -1027,6 +1134,8 @@ export default async function handler(req, res) {
       styles,
       scripts,
       resources,
+      backgroundImages,
+      iconFonts,
     };
 
     // Add responsive data if captured
