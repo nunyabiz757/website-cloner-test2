@@ -1,15 +1,28 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { Button } from '../ui/Button';
+import { ChevronDown } from 'lucide-react';
+import { useState } from 'react';
 
 export function Navbar() {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+  const [showFeaturesDropdown, setShowFeaturesDropdown] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
     navigate('/');
   };
+
+  const features = [
+    { name: 'All Features', path: '/features' },
+    { name: 'Website Cloning', path: '/features/website-cloning' },
+    { name: 'WordPress to GHL', path: '/features/wordpress-to-ghl' },
+    { name: 'Performance Optimization', path: '/features/performance-optimization' },
+    { name: 'SEO Analysis', path: '/features/seo-analysis' },
+    { name: 'Security Scanning', path: '/features/security-scanning' },
+    { name: 'Technology Detection', path: '/features/technology-detection' },
+  ];
 
   return (
     <nav className="bg-white shadow-sm border-b sticky top-0 z-50">
@@ -33,12 +46,36 @@ export function Navbar() {
             >
               Home
             </Link>
-            <Link
-              to="/features"
-              className="text-gray-700 hover:text-blue-600 transition-colors font-medium"
+
+            {/* Features Dropdown */}
+            <div
+              className="relative"
+              onMouseEnter={() => setShowFeaturesDropdown(true)}
+              onMouseLeave={() => setShowFeaturesDropdown(false)}
             >
-              Features
-            </Link>
+              <button
+                className="flex items-center gap-1 text-gray-700 hover:text-blue-600 transition-colors font-medium"
+              >
+                Features
+                <ChevronDown size={16} className={`transition-transform ${showFeaturesDropdown ? 'rotate-180' : ''}`} />
+              </button>
+
+              {showFeaturesDropdown && (
+                <div className="absolute top-full left-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2">
+                  {features.map((feature) => (
+                    <Link
+                      key={feature.path}
+                      to={feature.path}
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                      onClick={() => setShowFeaturesDropdown(false)}
+                    >
+                      {feature.name}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+
             <Link
               to="/documentation"
               className="text-gray-700 hover:text-blue-600 transition-colors font-medium"
