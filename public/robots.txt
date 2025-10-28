@@ -1,0 +1,15 @@
+# Robots.txt for Website Cloner Pro
+# Currently set to noindex - remove these lines when ready to launch
+
+User-agent: *
+Disallow: /
+
+# When ready to launch, replace above with:
+# User-agent: *
+# Allow: /
+# Disallow: /dashboard
+# Disallow: /clone
+# Disallow: /projects
+# Disallow: /settings
+#
+# Sitemap: https://websiteclonerpro.com/sitemap.xml
