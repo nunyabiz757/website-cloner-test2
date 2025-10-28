@@ -114,35 +114,44 @@ export function DocumentationPage() {
 
         {/* Quick Links */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <Card className="p-4 hover:shadow-md transition-shadow cursor-pointer">
+          <div
+            onClick={() => document.getElementById('getting-started')?.scrollIntoView({ behavior: 'smooth' })}
+            className="p-4 bg-transparent hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-500 rounded-lg border border-gray-200 hover:border-transparent transition-all duration-200 cursor-pointer transform hover:scale-105 hover:shadow-lg group"
+          >
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                <Book className="text-blue-600" size={20} />
+              <div className="w-10 h-10 bg-blue-100 group-hover:bg-white/20 rounded-lg flex items-center justify-center transition-colors duration-200">
+                <Book className="text-blue-600 group-hover:text-white transition-colors duration-200" size={20} />
               </div>
-              <h3 className="font-semibold text-gray-900">Getting Started</h3>
+              <h3 className="font-semibold text-gray-900 group-hover:text-white transition-colors duration-200">Getting Started</h3>
             </div>
-            <p className="text-sm text-gray-600">New to Website Cloner Pro? Start here.</p>
-          </Card>
+            <p className="text-sm text-gray-600 group-hover:text-white transition-colors duration-200">New to Website Cloner Pro? Start here.</p>
+          </div>
 
-          <Card className="p-4 hover:shadow-md transition-shadow cursor-pointer">
+          <div
+            onClick={() => document.getElementById('export')?.scrollIntoView({ behavior: 'smooth' })}
+            className="p-4 bg-transparent hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-500 rounded-lg border border-gray-200 hover:border-transparent transition-all duration-200 cursor-pointer transform hover:scale-105 hover:shadow-lg group"
+          >
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                <Code className="text-green-600" size={20} />
+              <div className="w-10 h-10 bg-green-100 group-hover:bg-white/20 rounded-lg flex items-center justify-center transition-colors duration-200">
+                <Code className="text-green-600 group-hover:text-white transition-colors duration-200" size={20} />
               </div>
-              <h3 className="font-semibold text-gray-900">API Reference</h3>
+              <h3 className="font-semibold text-gray-900 group-hover:text-white transition-colors duration-200">API Reference</h3>
             </div>
-            <p className="text-sm text-gray-600">Detailed API documentation and examples.</p>
-          </Card>
+            <p className="text-sm text-gray-600 group-hover:text-white transition-colors duration-200">Detailed API documentation and examples.</p>
+          </div>
 
-          <Card className="p-4 hover:shadow-md transition-shadow cursor-pointer">
+          <div
+            onClick={() => document.getElementById('optimization')?.scrollIntoView({ behavior: 'smooth' })}
+            className="p-4 bg-transparent hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-500 rounded-lg border border-gray-200 hover:border-transparent transition-all duration-200 cursor-pointer transform hover:scale-105 hover:shadow-lg group"
+          >
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                <Shield className="text-purple-600" size={20} />
+              <div className="w-10 h-10 bg-purple-100 group-hover:bg-white/20 rounded-lg flex items-center justify-center transition-colors duration-200">
+                <Shield className="text-purple-600 group-hover:text-white transition-colors duration-200" size={20} />
               </div>
-              <h3 className="font-semibold text-gray-900">Best Practices</h3>
+              <h3 className="font-semibold text-gray-900 group-hover:text-white transition-colors duration-200">Best Practices</h3>
             </div>
-            <p className="text-sm text-gray-600">Tips and tricks for optimal results.</p>
-          </Card>
+            <p className="text-sm text-gray-600 group-hover:text-white transition-colors duration-200">Tips and tricks for optimal results.</p>
+          </div>
         </div>
 
         {/* Documentation Sections */}
