@@ -1154,6 +1154,15 @@ export class CloneService {
         throw new Error('User not authenticated');
       }
 
+      // Prepare metadata with embedded detection/analysis data
+      const metadataWithAnalysis = {
+        ...(project.metadata || {}),
+        detection: project.detection || null,
+        seoAnalysis: project.seoAnalysis || null,
+        securityScan: project.securityScan || null,
+        technologyStack: project.technologyStack || null,
+      };
+
       const { error } = await supabase
         .from('projects')
         .upsert({
@@ -1170,11 +1179,7 @@ export class CloneService {
           optimized_score: project.optimizedScore,
           metrics: project.metrics || {},
           assets: project.assets || [],
-          metadata: project.metadata || {},
-          detection: project.detection || null,
-          seo_analysis: project.seoAnalysis || null,
-          security_scan: project.securityScan || null,
-          technology_stack: project.technologyStack || null,
+          metadata: metadataWithAnalysis,
           created_at: project.createdAt.toISOString(),
         });
 
@@ -1304,6 +1309,9 @@ export class CloneService {
   }
 
   private mapDatabaseToProject(row: any): CloneProject {
+    // Extract detection/analysis data from metadata (for backward compatibility)
+    const metadata = row.metadata || {};
+
     return {
       id: row.id,
       source: row.source,
@@ -1319,11 +1327,11 @@ export class CloneService {
       metrics: row.metrics,
       assets: row.assets,
       archived: row.archived || false,
-      metadata: row.metadata,
-      detection: row.detection,
-      seoAnalysis: row.seo_analysis,
-      securityScan: row.security_scan,
-      technologyStack: row.technology_stack,
+      metadata: metadata,
+      detection: metadata.detection || row.detection || null,
+      seoAnalysis: metadata.seoAnalysis || row.seo_analysis || null,
+      securityScan: metadata.securityScan || row.security_scan || null,
+      technologyStack: metadata.technologyStack || row.technology_stack || null,
     };
   }
 }
