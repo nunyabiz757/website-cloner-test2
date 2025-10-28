@@ -73,14 +73,14 @@ export function Navbar() {
                           <Link
                             key={feature.path}
                             to={feature.path}
-                            className="group p-4 rounded-lg hover:bg-gray-50 transition-all duration-200 flex flex-col items-start"
+                            className="group p-4 rounded-lg bg-transparent hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-500 transition-all duration-200 flex flex-col items-start transform hover:scale-105 hover:shadow-lg"
                             onClick={() => setShowFeaturesDropdown(false)}
                           >
                             <div className={`w-10 h-10 ${feature.color} rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-200`}>
                               <Icon className="text-white" size={20} />
                             </div>
-                            <h3 className="font-semibold text-sm text-gray-900 mb-1">{feature.name}</h3>
-                            <p className="text-xs text-gray-600">{feature.description}</p>
+                            <h3 className="font-semibold text-sm text-gray-900 group-hover:text-white mb-1 transition-colors duration-200">{feature.name}</h3>
+                            <p className="text-xs text-gray-600 group-hover:text-white transition-colors duration-200">{feature.description}</p>
                           </Link>
                         );
                       })}
