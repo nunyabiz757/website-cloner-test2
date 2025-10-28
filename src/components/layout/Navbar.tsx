@@ -18,6 +18,8 @@ export function Navbar() {
     { name: 'All Features', path: '/features' },
     { name: 'Website Cloning', path: '/features/website-cloning' },
     { name: 'WordPress to GHL', path: '/features/wordpress-to-ghl' },
+    { name: 'WP to GHL Conversion', path: '/features/wp-to-ghl-conversion' },
+    { name: 'GHL to GHL Cloning', path: '/features/ghl-to-ghl' },
     { name: 'Performance Optimization', path: '/features/performance-optimization' },
     { name: 'SEO Analysis', path: '/features/seo-analysis' },
     { name: 'Security Scanning', path: '/features/security-scanning' },
