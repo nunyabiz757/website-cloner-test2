@@ -25,6 +25,15 @@ import { DetectionPage } from './pages/DetectionPage';
 import { DocumentationPage } from './pages/DocumentationPage';
 import { SettingsPage } from './pages/SettingsPage';
 
+// Feature Pages
+import { FeaturesPage } from './pages/FeaturesPage';
+import { WebsiteCloningFeature } from './pages/features/WebsiteCloningFeature';
+import { WordPressToGHLFeature } from './pages/features/WordPressToGHLFeature';
+import { PerformanceOptimizationFeature } from './pages/features/PerformanceOptimizationFeature';
+import { SEOAnalysisFeature } from './pages/features/SEOAnalysisFeature';
+import { SecurityScanningFeature } from './pages/features/SecurityScanningFeature';
+import { TechnologyDetectionFeature } from './pages/features/TechnologyDetectionFeature';
+
 function App() {
   return (
     <BrowserRouter>
@@ -38,6 +47,16 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
+              <Route path="/documentation" element={<DocumentationPage />} />
+
+              {/* Feature Pages (Public) */}
+              <Route path="/features" element={<FeaturesPage />} />
+              <Route path="/features/website-cloning" element={<WebsiteCloningFeature />} />
+              <Route path="/features/wordpress-to-ghl" element={<WordPressToGHLFeature />} />
+              <Route path="/features/performance-optimization" element={<PerformanceOptimizationFeature />} />
+              <Route path="/features/seo-analysis" element={<SEOAnalysisFeature />} />
+              <Route path="/features/security-scanning" element={<SecurityScanningFeature />} />
+              <Route path="/features/technology-detection" element={<TechnologyDetectionFeature />} />
 
               {/* Protected Routes */}
               <Route
@@ -175,14 +194,6 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <DetectionPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/documentation"
-                element={
-                  <ProtectedRoute>
-                    <DocumentationPage />
                   </ProtectedRoute>
                 }
               />

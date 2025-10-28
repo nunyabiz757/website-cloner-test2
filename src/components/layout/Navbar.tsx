@@ -33,21 +33,25 @@ export function Navbar() {
             >
               Home
             </Link>
+            <Link
+              to="/features"
+              className="text-gray-700 hover:text-blue-600 transition-colors font-medium"
+            >
+              Features
+            </Link>
+            <Link
+              to="/documentation"
+              className="text-gray-700 hover:text-blue-600 transition-colors font-medium"
+            >
+              Documentation
+            </Link>
             {user && (
-              <>
-                <Link
-                  to="/documentation"
-                  className="text-gray-700 hover:text-blue-600 transition-colors font-medium"
-                >
-                  Documentation
-                </Link>
-                <Link
-                  to="/settings"
-                  className="text-gray-700 hover:text-blue-600 transition-colors font-medium"
-                >
-                  Settings
-                </Link>
-              </>
+              <Link
+                to="/settings"
+                className="text-gray-700 hover:text-blue-600 transition-colors font-medium"
+              >
+                Settings
+              </Link>
             )}
           </div>
 
