@@ -1,7 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { Button } from '../ui/Button';
-import { ChevronDown, Home, Layers, BookOpen, Settings } from 'lucide-react';
+import { ChevronDown, Home, Layers, BookOpen, Settings, LogIn, LogOut } from 'lucide-react';
 import { useState } from 'react';
 
 export function Navbar() {
@@ -106,14 +106,22 @@ export function Navbar() {
                 <span className="hidden md:block text-sm text-gray-600">
                   {user.email}
                 </span>
-                <Button size="sm" variant="outline" onClick={handleSignOut}>
+                <button
+                  onClick={handleSignOut}
+                  className="relative px-6 py-2.5 text-sm font-semibold text-white rounded-lg bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 transform hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg flex items-center gap-2"
+                >
+                  <LogOut size={16} />
                   Sign Out
-                </Button>
+                </button>
               </>
             ) : (
-              <Button size="sm" onClick={() => navigate('/login')}>
+              <button
+                onClick={() => navigate('/login')}
+                className="relative px-6 py-2.5 text-sm font-semibold text-white rounded-lg bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 transform hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg flex items-center gap-2"
+              >
+                <LogIn size={16} />
                 Sign In
-              </Button>
+              </button>
             )}
           </div>
         </div>
