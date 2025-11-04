@@ -11,11 +11,36 @@ A professional web application that clones websites, optimizes their performance
 ### Core Functionality
 
 - **Website Cloning**: Clone any website by URL with automatic asset extraction
+- **WordPress REST API Integration**: Native WordPress block detection and cloning via REST API
 - **Performance Analysis**: Comprehensive performance scoring system (0-100)
 - **Automatic Optimization**: 50+ optimization techniques applied automatically
 - **WordPress Export**: Export to 11 popular WordPress page builders
 - **Live Preview**: Side-by-side comparison of original vs optimized versions
 - **Export Formats**: HTML, WordPress Theme, Static Site, and React Component
+
+### WordPress Features (NEW!)
+
+#### Native WordPress Block Detection
+- **Automatic WordPress Detection**: Detects WordPress sites via REST API in under 2 seconds
+- **Native Block Parsing**: Parses WordPress block comments (`<!-- wp:heading -->`) for perfect hierarchy
+- **Page Builder Detection**: Identifies Elementor, Divi, Gutenberg, Beaver Builder, Bricks, Oxygen, WPBakery
+- **Block Structure Preservation**: Maintains nested blocks (columns → column → heading) with all attributes
+- **REST API Integration**: Fetches posts and pages via `/wp-json/wp/v2/` endpoints
+
+#### WordPress Test Logger
+- **Comprehensive Testing Interface**: `/wordpress-test` route for WordPress integration testing
+- **Real-time Logging**: Step-by-step progress tracking with timestamps
+- **Quick Test URLs**: Pre-configured tests for WordPress.org, TechCrunch, Smashing Magazine, CSS-Tricks
+- **Custom URL Testing**: Test any WordPress site with detailed logging
+- **Block Analytics**: View block counts, types, and structure analysis
+- **JSON Data Preview**: Inspect WordPress API responses and parsed blocks
+
+#### WordPress Clone Features
+- **Posts & Pages**: Fetch unlimited posts and pages from WordPress REST API
+- **Block Hierarchy**: Complete nested block structure with attributes
+- **Meta Data**: Site info, version detection, API endpoint discovery
+- **Page Builder Data**: Specialized handling for page builder content
+- **Error Handling**: Graceful fallbacks for REST API authentication and CORS issues
 
 ### Optimization Techniques
 
@@ -88,12 +113,24 @@ Export your cloned website to any of these popular WordPress builders:
 - Recharts for performance graphs
 
 ### Key Libraries
-- `axios` - HTTP requests
+- `axios` - HTTP requests and WordPress REST API calls
 - `cheerio` - HTML parsing
 - `jszip` - ZIP file generation
 - `clean-css` - CSS minification
 - `html-minifier-terser` - HTML minification
 - `terser` - JavaScript minification
+- `playwright` - Browser automation for complex site cloning (Railway backend)
+
+### Backend Services
+- **Railway**: Docker container running Playwright for browser automation
+  - Full Chromium support with all dependencies
+  - 5-minute timeout (vs 10-second on Vercel)
+  - WordPress REST API integration
+  - Browser-based screenshot capture
+- **Vercel**: Frontend hosting with serverless functions
+  - React app deployment
+  - API proxy to Railway backend
+  - Fast global CDN
 
 ## Installation
 
@@ -110,6 +147,49 @@ npm run dev
 ```
 
 Visit `http://localhost:5173` to see the application.
+
+### Testing WordPress Integration
+
+Access the WordPress Test Logger at `/wordpress-test` (requires authentication):
+
+```bash
+# Start development server
+npm run dev
+
+# Navigate to http://localhost:5173/wordpress-test
+```
+
+**Quick Test URLs:**
+- WordPress.org News - Official WordPress site
+- TechCrunch - Large publication
+- Smashing Magazine - WordPress magazine
+- CSS-Tricks - Web development blog
+- Example.com - Non-WordPress site (negative test)
+
+**What Gets Logged:**
+1. WordPress Detection (REST API availability, version, site info)
+2. API Test (endpoint validation)
+3. Fetch Posts (retrieves posts from `/wp/v2/posts`)
+4. Fetch Pages (retrieves pages from `/wp/v2/pages`)
+5. Parse Blocks (extracts WordPress block structure)
+6. Clone Summary (final statistics and results)
+
+### Running Tests
+
+```bash
+# Run all unit tests
+npm test
+
+# Run WordPress API service tests specifically
+npm test WordPressAPIService
+```
+
+The test suite includes 21 comprehensive tests for WordPress block parsing:
+- Simple and nested block parsing
+- Custom block namespaces (ACF, Elementor, etc.)
+- Malformed JSON handling
+- Real-world WordPress content scenarios
+- Block filtering and depth limiting
 
 ### Build
 
@@ -128,10 +208,29 @@ npm run preview
 ### 1. Clone a Website
 
 Enter a URL and click "Clone & Optimize". The system will:
-- Fetch HTML from the URL
-- Parse and extract all assets (images, CSS, JS, fonts)
-- Download assets with streaming support
-- Preserve original structure
+- **Detect WordPress**: Automatically checks if the site is WordPress via REST API
+- **Parse Blocks**: For WordPress sites, extracts native Gutenberg blocks with attributes
+- **Fetch Content**: Downloads posts, pages, and media via `/wp-json/wp/v2/` endpoints
+- **Extract Assets**: For non-WordPress sites, parses HTML and extracts images, CSS, JS, fonts
+- **Page Builder Detection**: Identifies which page builder is in use (if any)
+- **Preserve Structure**: Maintains original hierarchy and relationships
+
+#### WordPress Detection Flow
+```typescript
+// Step 1: Detection (< 2 seconds)
+const detection = await wordPressAPIService.detectWordPress(url);
+// Returns: { isWordPress: true, apiUrl, siteInfo, pageBuilder, confidence }
+
+// Step 2: Clone via REST API
+if (detection.isWordPress) {
+  const clone = await wordPressAPIService.cloneWordPressSite(apiUrl);
+  // Returns: { posts, pages, blocks, metadata }
+}
+
+// Step 3: Parse Native Blocks
+const blocks = wordPressAPIService.parseWordPressBlocks(content);
+// Returns: [{ namespace, name, attributes, innerHTML, innerBlocks }]
+```
 
 ### 2. Performance Analysis
 
@@ -213,29 +312,40 @@ website-cloner-pro/
 ├── src/
 │   ├── components/
 │   │   ├── dashboard/
-│   │   │   ├── CloneInput.tsx       # URL/file input form
-│   │   │   └── ProjectCard.tsx      # Project list item
+│   │   │   ├── CloneInput.tsx          # URL/file input form with WordPress detection
+│   │   │   └── ProjectCard.tsx         # Project list item
+│   │   ├── wordpress/
+│   │   │   ├── WordPressTestLogger.tsx # WordPress REST API test interface
+│   │   │   └── WordPressDetectionBadge.tsx # WordPress detection badge
 │   │   ├── export/
-│   │   │   └── ExportModal.tsx      # Export dialog
+│   │   │   └── ExportModal.tsx         # Export dialog
 │   │   ├── ui/
-│   │   │   ├── Button.tsx           # Button component
-│   │   │   ├── Card.tsx             # Card component
-│   │   │   ├── Badge.tsx            # Badge component
-│   │   │   └── Progress.tsx         # Progress indicators
-│   │   ├── Dashboard.tsx            # Main dashboard view
-│   │   └── ProjectDetail.tsx        # Project detail view
+│   │   │   ├── Button.tsx              # Button component
+│   │   │   ├── Card.tsx                # Card component
+│   │   │   ├── Badge.tsx               # Badge component
+│   │   │   └── Progress.tsx            # Progress indicators
+│   │   ├── Dashboard.tsx               # Main dashboard view
+│   │   └── ProjectDetail.tsx           # Project detail view
 │   ├── services/
-│   │   ├── CloneService.ts          # Website cloning logic
-│   │   ├── PerformanceService.ts    # Performance analysis
-│   │   ├── OptimizationService.ts   # Optimization engine
+│   │   ├── CloneService.ts             # Website cloning logic
+│   │   ├── PerformanceService.ts       # Performance analysis
+│   │   ├── OptimizationService.ts      # Optimization engine
 │   │   └── wordpress/
-│   │       ├── ElementorService.ts  # Elementor export
-│   │       └── GutenbergService.ts  # Gutenberg export
+│   │       ├── WordPressAPIService.ts  # REST API integration (NEW!)
+│   │       ├── ElementorService.ts     # Elementor export
+│   │       └── GutenbergService.ts     # Gutenberg export
 │   ├── stores/
-│   │   └── projectStore.ts          # Zustand state management
+│   │   └── projectStore.ts             # Zustand state management
 │   ├── types/
-│   │   └── index.ts                 # TypeScript types
-│   └── App.tsx                      # Main app component
+│   │   ├── index.ts                    # Core TypeScript types
+│   │   └── wordpress.ts                # WordPress types (NEW!)
+│   ├── pages/
+│   │   └── WordPressTestPage.tsx       # WordPress test logger page (NEW!)
+│   └── App.tsx                         # Main app component
+├── api/
+│   └── capture.ts                      # Playwright browser automation (Railway)
+├── Dockerfile                          # Docker config for Railway deployment
+├── railway.json                        # Railway deployment config
 ├── package.json
 └── README.md
 ```
@@ -311,13 +421,57 @@ When cloning a website, you can configure:
 - **Include Assets**: Download images, CSS, JS, and fonts
 - **Crawl Depth**: 1-5 levels of link following
 
+## Deployment
+
+### Railway + Vercel Architecture
+
+This project uses a split architecture for optimal performance:
+
+**Railway (Backend):**
+- Runs Playwright in Docker container
+- Full Chromium browser with all dependencies
+- 5-minute timeout for complex operations
+- Handles WordPress REST API calls
+- Auto-deploys from GitHub `main` branch
+
+**Vercel (Frontend):**
+- Hosts React application
+- Serverless functions for API proxy
+- Global CDN for fast delivery
+- Auto-deploys from GitHub `main` branch
+
+### Environment Variables
+
+Required for production deployment:
+
+```bash
+# Railway Backend
+SUPABASE_URL=your_supabase_url
+SUPABASE_ANON_KEY=your_supabase_anon_key
+PORT=3000
+
+# Vercel Frontend
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+VITE_RAILWAY_API_URL=https://your-railway-app.railway.app
+```
+
+See `RAILWAY_DEPLOYMENT_GUIDE.md` for complete deployment instructions.
+
 ## Limitations
 
-This is a client-side implementation with some limitations:
+### General Limitations
 - CORS restrictions may prevent cloning some websites
 - Large websites may take longer to clone
 - Some dynamic content may not be captured
 - Asset downloads depend on network speed
+
+### WordPress-Specific Limitations
+- **REST API Required**: WordPress sites must have REST API enabled (most do by default)
+- **Authentication**: Private/draft content requires authentication (public content works fine)
+- **Custom Endpoints**: Custom post types may need additional endpoint configuration
+- **Page Builder Content**: Some page builders store data in proprietary formats
+- **CORS**: Some WordPress sites may have CORS restrictions (use Railway backend to bypass)
 
 ## Advanced Optimization System (In Progress)
 
