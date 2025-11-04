@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
-import { Globe, Upload, Settings } from 'lucide-react';
+import { Globe, Upload, Settings, Search } from 'lucide-react';
 import { Button } from '../ui/Button';
 import type { CloneOptions } from '../../types';
+import { wordPressAPIService } from '../../services/wordpress/WordPressAPIService';
+import { WordPressDetectionBadge } from '../wordpress/WordPressDetectionBadge';
+import type { WordPressDetectionResult } from '../../types/wordpress';
 
 interface CloneInputProps {
   onClone: (options: CloneOptions) => void;
@@ -18,6 +21,30 @@ export function CloneInput({ onClone, isLoading = false }: CloneInputProps) {
     respectRobots: true,
     includeAssets: true,
   });
+
+  // WordPress detection state
+  const [wpDetection, setWpDetection] = useState<WordPressDetectionResult | null>(null);
+  const [detecting, setDetecting] = useState(false);
+
+  const handleDetectWordPress = async () => {
+    if (!url.trim()) {
+      alert('Please enter a URL first');
+      return;
+    }
+
+    setDetecting(true);
+    setWpDetection(null);
+
+    try {
+      const result = await wordPressAPIService.detectWordPress(url);
+      setWpDetection(result);
+    } catch (error) {
+      console.error('WordPress detection failed:', error);
+      alert('Failed to detect WordPress. Please check the URL and try again.');
+    } finally {
+      setDetecting(false);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,15 +97,74 @@ export function CloneInput({ onClone, isLoading = false }: CloneInputProps) {
               <label htmlFor="url" className="block text-sm font-medium text-gray-700 mb-2">
                 Website URL
               </label>
-              <input
-                id="url"
-                type="url"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                placeholder="https://example.com"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                disabled={isLoading}
-              />
+              <div className="flex gap-2">
+                <input
+                  id="url"
+                  type="url"
+                  value={url}
+                  onChange={(e) => {
+                    setUrl(e.target.value);
+                    setWpDetection(null); // Clear detection when URL changes
+                  }}
+                  placeholder="https://example.com"
+                  className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  disabled={isLoading || detecting}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleDetectWordPress}
+                  disabled={!url.trim() || isLoading || detecting}
+                  className="whitespace-nowrap"
+                >
+                  {detecting ? (
+                    <>
+                      <span className="inline-block w-4 h-4 border-2 border-gray-600 border-t-transparent rounded-full animate-spin mr-2" />
+                      Detecting...
+                    </>
+                  ) : (
+                    <>
+                      <Search size={16} className="mr-2" />
+                      Detect WordPress
+                    </>
+                  )}
+                </Button>
+              </div>
+
+              {/* WordPress Detection Results */}
+              {wpDetection && (
+                <div className="mt-4">
+                  {wpDetection.isWordPress ? (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+                          <Search className="text-white" size={16} />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="text-sm font-semibold text-blue-900 mb-1">
+                            WordPress Site Detected!
+                          </h4>
+                          <p className="text-xs text-blue-700 mb-2">
+                            {wpDetection.siteInfo?.name || 'WordPress site'}
+                            {wpDetection.version && ` (v${wpDetection.version})`}
+                          </p>
+                          {wpDetection.pageBuilder && wpDetection.pageBuilder.isActive && (
+                            <p className="text-xs text-blue-600">
+                              Page Builder: <span className="font-semibold capitalize">{wpDetection.pageBuilder.name}</span>
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                      <p className="text-sm text-gray-600">
+                        Not a WordPress site, or REST API is disabled.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           ) : (
             <div className="mb-6">

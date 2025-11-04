@@ -11,6 +11,7 @@ import { Toast } from './ui/Toast';
 import { loggingService } from '../services/LoggingService';
 import { cloneService } from '../services/CloneService';
 import { useProjectStore } from '../stores/projectStore';
+import { WordPressDetectionBadge } from './wordpress/WordPressDetectionBadge';
 
 interface DashboardProps {
   initialUrl?: string;
@@ -592,7 +593,17 @@ export function Dashboard({ initialUrl }: DashboardProps) {
                             Completed
                           </span>
                         </div>
-                        <p className="text-sm text-gray-600 mb-4">{project.url}</p>
+                        <p className="text-sm text-gray-600 mb-2">{project.url}</p>
+
+                        {/* WordPress Detection Badge */}
+                        {fullProject?.metadata?.wordPressData && (
+                          <div className="mb-4">
+                            <WordPressDetectionBadge
+                              wordPressData={fullProject.metadata.wordPressData}
+                              compact={true}
+                            />
+                          </div>
+                        )}
 
                         <div className="mb-6">
                           <h4 className="text-sm font-semibold text-gray-700 mb-3 uppercase">Lighthouse Scores</h4>
@@ -773,7 +784,17 @@ export function Dashboard({ initialUrl }: DashboardProps) {
                               Archived
                             </span>
                           </div>
-                          <p className="text-sm text-gray-600 mb-4">{project.url}</p>
+                          <p className="text-sm text-gray-600 mb-2">{project.url}</p>
+
+                          {/* WordPress Detection Badge */}
+                          {fullProject?.metadata?.wordPressData && (
+                            <div className="mb-4">
+                              <WordPressDetectionBadge
+                                wordPressData={fullProject.metadata.wordPressData}
+                                compact={true}
+                              />
+                            </div>
+                          )}
 
                           <div className="mb-6">
                             <h4 className="text-sm font-semibold text-gray-700 mb-3 uppercase">Lighthouse Scores</h4>
