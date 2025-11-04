@@ -12,6 +12,7 @@ import { cloneLimiter } from '../utils/security/rateLimiter';
 import { securityLogger } from './SecurityLogger';
 import { ComponentDetector } from './detection/ComponentDetector';
 import { BrowserService } from './BrowserService';
+import { wordPressAPIService } from './wordpress/WordPressAPIService';
 
 export class CloneService {
   private projects: Map<string, CloneProject> = new Map();
@@ -229,24 +230,70 @@ export class CloneService {
 
       project.originalHtml = html;
 
-      console.log('startAnalysis: Step 2 - Parsing HTML');
+      // Step 2: Check if this is a WordPress site (via REST API)
+      console.log('startAnalysis: Step 2 - Checking for WordPress REST API');
+      project.progress = 25;
+      project.currentStep = 'Detecting WordPress';
+      options.onProgress?.(25, 'Detecting WordPress');
+
+      const wpDetection = await wordPressAPIService.detectWordPress(options.source);
+
+      if (wpDetection.isWordPress && wpDetection.apiUrl) {
+        console.log('startAnalysis: WordPress detected! Using REST API for native block parsing');
+        loggingService.success('clone', `WordPress detected at ${options.source}`, { projectId });
+
+        project.currentStep = 'Cloning via WordPress REST API';
+        options.onProgress?.(30, 'Cloning via WordPress REST API');
+
+        // Clone using WordPress REST API (gets native blocks)
+        const wpCloneResult = await wordPressAPIService.cloneWordPressSite(wpDetection.apiUrl, {
+          maxPosts: 50,
+          maxPages: 50,
+          detectPageBuilder: true,
+          blockOptions: {
+            includeHTML: true,
+            maxDepth: 10,
+          },
+        });
+
+        // Store WordPress-specific data in project metadata
+        if (!project.metadata) {
+          project.metadata = {} as WebsiteMetadata;
+        }
+
+        project.metadata.wordPressData = {
+          isWordPress: true,
+          version: wpDetection.version,
+          apiUrl: wpDetection.apiUrl,
+          siteName: wpDetection.siteInfo?.name,
+          pageBuilder: wpCloneResult.pageBuilder?.name || 'unknown',
+          postsCloned: wpCloneResult.postsCloned,
+          pagesCloned: wpCloneResult.pagesCloned,
+          blocksCount: wpCloneResult.blocksCount,
+          posts: wpCloneResult.posts,
+        };
+
+        loggingService.success('clone', `WordPress clone complete: ${wpCloneResult.postsCloned} posts, ${wpCloneResult.pagesCloned} pages, ${wpCloneResult.blocksCount} blocks parsed`, { projectId });
+      }
+
+      console.log('startAnalysis: Step 3 - Parsing HTML');
       project.progress = 30;
       project.currentStep = 'Parsing HTML structure';
 
       const parsedData = this.parseHtml(html, options.source);
       console.log('startAnalysis: HTML parsed');
 
-      console.log('startAnalysis: Step 3 - Extracting metadata');
+      console.log('startAnalysis: Step 4 - Extracting metadata');
       project.progress = 50;
       project.currentStep = 'Extracting metadata';
 
       const metadata = this.extractMetadata(parsedData, html);
-      project.metadata = metadata;
+      project.metadata = { ...metadata, ...project.metadata }; // Merge with existing metadata (including WordPress data)
       console.log('startAnalysis: Metadata extracted:', metadata);
 
       loggingService.info('clone', `Detected framework: ${metadata.framework}`, { projectId });
 
-      console.log('startAnalysis: Step 4 - Detecting page builder components');
+      console.log('startAnalysis: Step 5 - Detecting page builder components');
       project.progress = 40;
       project.currentStep = 'Detecting page builder components';
 

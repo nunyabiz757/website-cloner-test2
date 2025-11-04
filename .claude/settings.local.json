@@ -40,7 +40,8 @@
       "Bash(ls:*)",
       "Bash(npm test:*)",
       "Bash(npm run:*)",
-      "Bash(railway status:*)"
+      "Bash(railway status:*)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": []

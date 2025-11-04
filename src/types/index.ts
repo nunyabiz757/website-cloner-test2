@@ -102,6 +102,17 @@ export interface WebsiteMetadata {
       detectionMethod: string;
     }>;
   };
+  wordPressData?: {
+    isWordPress: boolean;
+    version?: string;
+    apiUrl?: string;
+    siteName?: string;
+    pageBuilder?: string;
+    postsCloned?: number;
+    pagesCloned?: number;
+    blocksCount?: number;
+    posts?: any[];
+  };
 }
 
 export interface PerformanceMetrics {
