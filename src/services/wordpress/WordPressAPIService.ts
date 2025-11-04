@@ -64,7 +64,7 @@ export class WordPressAPIService {
         try {
           result.pageBuilder = await this.detectPageBuilder(siteUrl);
         } catch (error) {
-          loggingService.warn('wp-api', 'Could not detect page builder');
+          loggingService.warning('wp-api', 'Could not detect page builder');
         }
       }
     } catch (error) {
@@ -205,7 +205,7 @@ export class WordPressAPIService {
       const axiosError = error as AxiosError;
 
       if (axiosError.response?.status === 401) {
-        loggingService.warn(
+        loggingService.warning(
           'wp-api',
           'Could not fetch posts: authentication required (trying public endpoint)'
         );
@@ -266,7 +266,7 @@ export class WordPressAPIService {
       const axiosError = error as AxiosError;
 
       if (axiosError.response?.status === 401) {
-        loggingService.warn(
+        loggingService.warning(
           'wp-api',
           'Could not fetch pages: authentication required (trying public endpoint)'
         );
@@ -455,7 +455,7 @@ export class WordPressAPIService {
         );
       }
     } catch (error) {
-      loggingService.warn('wp-api', 'Could not detect page builder');
+      loggingService.warning('wp-api', 'Could not detect page builder');
     }
 
     return result;
@@ -485,7 +485,7 @@ export class WordPressAPIService {
     try {
       return JSON.parse(jsonString);
     } catch (error) {
-      loggingService.warn('wp-api', `Failed to parse block attributes: ${jsonString}`);
+      loggingService.warning('wp-api', `Failed to parse block attributes: ${jsonString}`);
       return {};
     }
   }
