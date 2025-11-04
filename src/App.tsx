@@ -24,6 +24,7 @@ import { GHLConverterPage } from './pages/GHLConverterPage';
 import { DetectionPage } from './pages/DetectionPage';
 import { DocumentationPage } from './pages/DocumentationPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { WordPressTestPage } from './pages/WordPressTestPage';
 
 // Feature Pages
 import { FeaturesPage } from './pages/FeaturesPage';
@@ -204,6 +205,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <SettingsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/wordpress-test"
+                element={
+                  <ProtectedRoute>
+                    <WordPressTestPage />
                   </ProtectedRoute>
                 }
               />
