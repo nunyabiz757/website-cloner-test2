@@ -233,17 +233,41 @@ export class CloneService {
       // Step 2: Check if this is a WordPress site (via REST API)
       console.log('startAnalysis: Step 2 - Checking for WordPress REST API');
       project.progress = 25;
-      project.currentStep = 'Detecting WordPress';
-      options.onProgress?.(25, 'Detecting WordPress');
+      project.currentStep = 'Detecting WordPress via REST API';
+      options.onProgress?.(25, '🔍 Detecting WordPress via REST API...');
 
+      console.log('[WordPress] Probing /wp-json/ endpoint...');
       const wpDetection = await wordPressAPIService.detectWordPress(options.source);
 
       if (wpDetection.isWordPress && wpDetection.apiUrl) {
-        console.log('startAnalysis: WordPress detected! Using REST API for native block parsing');
-        loggingService.success('clone', `WordPress detected at ${options.source}`, { projectId });
+        // WordPress detected - detailed logging
+        console.log('[WordPress] ✓ WordPress REST API detected!');
+        console.log(`[WordPress] Site: ${wpDetection.siteInfo?.name || 'Unknown'}`);
+        console.log(`[WordPress] Version: ${wpDetection.version || 'Unknown'}`);
+        console.log(`[WordPress] API URL: ${wpDetection.apiUrl}`);
+        console.log(`[WordPress] Confidence: ${wpDetection.confidence}%`);
 
-        project.currentStep = 'Cloning via WordPress REST API';
-        options.onProgress?.(30, 'Cloning via WordPress REST API');
+        loggingService.success('clone', `WordPress detected at ${options.source}`, {
+          projectId,
+          siteName: wpDetection.siteInfo?.name,
+          version: wpDetection.version,
+          apiUrl: wpDetection.apiUrl
+        });
+
+        // Detect page builder
+        if (wpDetection.pageBuilder?.isActive) {
+          console.log(`[WordPress] Page Builder: ${wpDetection.pageBuilder.name} (${wpDetection.pageBuilder.version || 'unknown version'})`);
+          project.currentStep = `WordPress detected: ${wpDetection.pageBuilder.name} page builder`;
+          options.onProgress?.(27, `✓ WordPress detected with ${wpDetection.pageBuilder.name} page builder`);
+        } else {
+          project.currentStep = 'WordPress detected: Gutenberg (native blocks)';
+          options.onProgress?.(27, '✓ WordPress detected with Gutenberg blocks');
+        }
+
+        // Start WordPress REST API cloning
+        project.currentStep = 'Fetching posts via REST API';
+        options.onProgress?.(30, '📥 Fetching posts via /wp/v2/posts...');
+        console.log('[WordPress] Fetching posts from REST API...');
 
         // Clone using WordPress REST API (gets native blocks)
         const wpCloneResult = await wordPressAPIService.cloneWordPressSite(wpDetection.apiUrl, {
@@ -255,6 +279,25 @@ export class CloneService {
             maxDepth: 10,
           },
         });
+
+        console.log(`[WordPress] ✓ Fetched ${wpCloneResult.postsCloned} posts`);
+        project.currentStep = 'Fetching pages via REST API';
+        options.onProgress?.(35, `✓ Fetched ${wpCloneResult.postsCloned} posts. Fetching pages...`);
+
+        console.log(`[WordPress] ✓ Fetched ${wpCloneResult.pagesCloned} pages`);
+        project.currentStep = 'Parsing WordPress blocks';
+        options.onProgress?.(40, `✓ Fetched ${wpCloneResult.pagesCloned} pages. Parsing blocks...`);
+
+        console.log(`[WordPress] ✓ Parsed ${wpCloneResult.blocksCount} blocks`);
+        console.log('[WordPress] Block types detected:', wpCloneResult.posts
+          .flatMap(p => p.blocks || [])
+          .map(b => `${b.namespace}/${b.name}`)
+          .filter((v, i, a) => a.indexOf(v) === i)
+          .slice(0, 10)
+          .join(', '));
+
+        project.currentStep = 'WordPress clone complete';
+        options.onProgress?.(45, `✓ WordPress clone complete: ${wpCloneResult.postsCloned} posts, ${wpCloneResult.pagesCloned} pages, ${wpCloneResult.blocksCount} blocks`);
 
         // Store WordPress-specific data in project metadata
         if (!project.metadata) {
@@ -274,11 +317,17 @@ export class CloneService {
         };
 
         loggingService.success('clone', `WordPress clone complete: ${wpCloneResult.postsCloned} posts, ${wpCloneResult.pagesCloned} pages, ${wpCloneResult.blocksCount} blocks parsed`, { projectId });
+      } else {
+        // Not WordPress or REST API disabled
+        console.log('[WordPress] Not a WordPress site or REST API is disabled');
+        project.currentStep = 'Not WordPress - using standard HTML parsing';
+        options.onProgress?.(30, '✓ Not WordPress - proceeding with standard HTML parsing');
       }
 
       console.log('startAnalysis: Step 3 - Parsing HTML');
-      project.progress = 30;
+      project.progress = wpDetection.isWordPress ? 50 : 30;
       project.currentStep = 'Parsing HTML structure';
+      options.onProgress?.(wpDetection.isWordPress ? 50 : 30, 'Parsing HTML structure');
 
       const parsedData = this.parseHtml(html, options.source);
       console.log('startAnalysis: HTML parsed');

@@ -169,20 +169,81 @@ export function CloneProgress({
 
       {/* Live Activity Log */}
       <div>
-        <h4 className="text-sm font-semibold text-gray-700 mb-3">Activity Log</h4>
-        <div className="bg-gray-900 rounded-lg p-4 max-h-64 overflow-y-auto font-mono text-sm">
+        <div className="flex items-center justify-between mb-3">
+          <h4 className="text-sm font-semibold text-gray-700">Activity Log</h4>
+          <span className="text-xs text-gray-500">{logs.length} events</span>
+        </div>
+        <div className="bg-gray-900 rounded-lg p-4 max-h-80 overflow-y-auto font-mono text-sm">
           {logs.length === 0 ? (
             <p className="text-gray-500">Waiting for activity...</p>
           ) : (
             <div className="space-y-1">
-              {logs.map((log, index) => (
-                <div key={index} className="flex items-start gap-2">
-                  <span className="text-green-400 flex-shrink-0">{'>'}</span>
-                  <span className="text-gray-300">{log}</span>
-                </div>
-              ))}
+              {logs.map((log, index) => {
+                // Detect log type by content
+                const isWordPress = log.includes('[WordPress]');
+                const isService = log.includes('[Service]');
+                const isError = log.includes('[ERROR]') || log.includes('Error:') || log.includes('❌');
+                const isWarning = log.includes('[WARNING]') || log.includes('WARNING:');
+                const isSuccess = log.includes('✓') || log.includes('complete') || log.includes('success');
+                const isInfo = log.includes('🔍') || log.includes('📥');
+
+                // Choose color based on log type
+                let textColor = 'text-gray-300';
+                let iconColor = 'text-green-400';
+
+                if (isWordPress) {
+                  textColor = 'text-blue-300';
+                  iconColor = 'text-blue-400';
+                } else if (isError) {
+                  textColor = 'text-red-300';
+                  iconColor = 'text-red-400';
+                } else if (isWarning) {
+                  textColor = 'text-yellow-300';
+                  iconColor = 'text-yellow-400';
+                } else if (isSuccess) {
+                  textColor = 'text-green-300';
+                  iconColor = 'text-green-400';
+                } else if (isInfo) {
+                  textColor = 'text-cyan-300';
+                  iconColor = 'text-cyan-400';
+                } else if (isService) {
+                  textColor = 'text-purple-300';
+                  iconColor = 'text-purple-400';
+                }
+
+                return (
+                  <div key={index} className="flex items-start gap-2">
+                    <span className={`${iconColor} flex-shrink-0`}>{'>'}</span>
+                    <span className={textColor}>{log}</span>
+                  </div>
+                );
+              })}
             </div>
           )}
+        </div>
+
+        {/* Log Legend */}
+        <div className="mt-2 flex flex-wrap gap-3 text-xs text-gray-600">
+          <div className="flex items-center gap-1">
+            <span className="text-blue-400">▪</span>
+            <span>WordPress</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <span className="text-green-400">▪</span>
+            <span>Success</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <span className="text-cyan-400">▪</span>
+            <span>Info</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <span className="text-yellow-400">▪</span>
+            <span>Warning</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <span className="text-red-400">▪</span>
+            <span>Error</span>
+          </div>
         </div>
       </div>
     </div>
