@@ -163,33 +163,31 @@ export interface NavigationResult extends CaptureResult {
 export class BrowserService {
   /**
    * Check if browser automation is available
-   * In Vercel deployment, this always returns true since we use serverless functions
+   * In Railway deployment, this always returns true since we run Playwright server-side
    */
   static isAvailable(): boolean {
-    return true; // Always available via Vercel API endpoint
+    return true; // Always available via Railway backend
   }
 
   /**
    * Launch browser instance
-   * This is a no-op since Vercel handles browser lifecycle
+   * This is a no-op since Railway backend handles browser lifecycle
    */
   async launch(options: BrowserOptions = {}): Promise<void> {
-    console.log('✅ Browser service ready (using Vercel serverless function)');
+    console.log('✅ Browser service ready (using Railway Playwright backend)');
   }
 
   /**
    * Navigate to URL and capture full rendered content using Railway API
    */
   async capturePage(url: string): Promise<CaptureResult> {
-    console.log(`🌐 Requesting browser capture for ${url} via Railway API...`);
+    console.log(`🌐 Requesting browser capture for ${url}...`);
 
     try {
-      // Call Railway API endpoint (Playwright runs on Railway, not Vercel)
-      const apiUrl = import.meta.env.VITE_RAILWAY_API_URL
-        ? `${import.meta.env.VITE_RAILWAY_API_URL}/api/capture`
-        : 'https://website-cloner-pro-production.up.railway.app/api/capture'; // Railway production endpoint
+      // Call same-origin API endpoint (everything runs on Railway)
+      const apiUrl = '/api/capture';
 
-      console.log(`📡 Calling Railway API: ${apiUrl}`);
+      console.log(`📡 Calling API: ${apiUrl}`);
 
       const response = await fetch(apiUrl, {
         method: 'POST',
@@ -206,17 +204,17 @@ export class BrowserService {
 
       const result: CaptureResult = await response.json();
 
-      console.log('✅ Page captured successfully via Vercel API');
+      console.log('✅ Page captured successfully');
       console.log(`📄 HTML length: ${result.html.length} chars`);
       console.log(`🎨 CSS length: ${result.styles.length} chars`);
       console.log(`📦 Resources: ${result.resources.images.length} images, ${result.resources.fonts.length} fonts`);
 
       return result;
     } catch (error) {
-      console.error('❌ Failed to capture page via Vercel API:', error);
+      console.error('❌ Failed to capture page:', error);
       throw new Error(
         `Browser automation failed: ${error instanceof Error ? error.message : 'Unknown error'}. ` +
-        'Please ensure your Vercel deployment has Playwright installed.'
+        'Please check that the Railway backend is running with Playwright installed.'
       );
     }
   }
@@ -232,9 +230,7 @@ export class BrowserService {
 
     try {
       // Call Railway API endpoint with responsive flag
-      const apiUrl = import.meta.env.VITE_RAILWAY_API_URL
-        ? `${import.meta.env.VITE_RAILWAY_API_URL}/api/capture`
-        : 'https://website-cloner-pro-production.up.railway.app/api/capture';
+      const apiUrl = '/api/capture';
 
       const response = await fetch(apiUrl, {
         method: 'POST',
@@ -275,9 +271,7 @@ export class BrowserService {
     console.log(`🎨 Requesting interactive state capture for ${url} via API...`);
 
     try {
-      const apiUrl = import.meta.env.VITE_RAILWAY_API_URL
-        ? `${import.meta.env.VITE_RAILWAY_API_URL}/api/capture`
-        : 'https://website-cloner-pro-production.up.railway.app/api/capture';
+      const apiUrl = '/api/capture';
 
       const response = await fetch(apiUrl, {
         method: 'POST',
@@ -317,9 +311,7 @@ export class BrowserService {
     console.log(`🎬 Requesting animation detection for ${url} via API...`);
 
     try {
-      const apiUrl = import.meta.env.VITE_RAILWAY_API_URL
-        ? `${import.meta.env.VITE_RAILWAY_API_URL}/api/capture`
-        : 'https://website-cloner-pro-production.up.railway.app/api/capture';
+      const apiUrl = '/api/capture';
 
       const response = await fetch(apiUrl, {
         method: 'POST',
@@ -359,9 +351,7 @@ export class BrowserService {
     console.log(`🎨 Requesting style analysis for ${url} via API...`);
 
     try {
-      const apiUrl = import.meta.env.VITE_RAILWAY_API_URL
-        ? `${import.meta.env.VITE_RAILWAY_API_URL}/api/capture`
-        : 'https://website-cloner-pro-production.up.railway.app/api/capture';
+      const apiUrl = '/api/capture';
 
       const response = await fetch(apiUrl, {
         method: 'POST',
@@ -402,9 +392,7 @@ export class BrowserService {
     console.log(`🧭 Requesting navigation detection for ${url} via API...`);
 
     try {
-      const apiUrl = import.meta.env.VITE_RAILWAY_API_URL
-        ? `${import.meta.env.VITE_RAILWAY_API_URL}/api/capture`
-        : 'https://website-cloner-pro-production.up.railway.app/api/capture';
+      const apiUrl = '/api/capture';
 
       const response = await fetch(apiUrl, {
         method: 'POST',
