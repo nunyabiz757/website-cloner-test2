@@ -22,7 +22,9 @@ export class WordPressAPIService {
   /**
    * Fast WordPress detection (under 2 seconds)
    *
-   * Checks if a URL is a WordPress site by probing the REST API endpoint
+   * Uses multiple detection methods:
+   * 1. REST API endpoint (best - allows native block parsing)
+   * 2. HTML meta tags and content (fallback - BuiltWith method)
    */
   async detectWordPress(url: string): Promise<WordPressDetectionResult> {
     loggingService.info('wp-api', `Detecting WordPress at ${url}`);
@@ -33,11 +35,10 @@ export class WordPressAPIService {
       errors: [],
     };
 
-    try {
-      // Normalize URL
-      const siteUrl = this.normalizeUrl(url);
+    const siteUrl = this.normalizeUrl(url);
 
-      // Try to fetch WordPress REST API root
+    // Method 1: Try REST API first (best method - allows block parsing)
+    try {
       const apiUrl = `${siteUrl}/wp-json/`;
 
       const response = await axios.get<WordPressSiteInfo>(apiUrl, {
@@ -57,7 +58,7 @@ export class WordPressAPIService {
 
         loggingService.success(
           'wp-api',
-          `✓ WordPress detected: ${response.data.name}`
+          `✓ WordPress detected via REST API: ${response.data.name}`
         );
 
         // Detect page builder
@@ -66,20 +67,102 @@ export class WordPressAPIService {
         } catch (error) {
           loggingService.warning('wp-api', 'Could not detect page builder');
         }
+
+        return result;
       }
     } catch (error) {
       const axiosError = error as AxiosError;
-
-      if (axiosError.response?.status === 404) {
-        loggingService.info('wp-api', 'Not a WordPress site (no REST API)');
-      } else {
-        const errorMsg =
-          axiosError.message || 'Unknown error during detection';
-        result.errors?.push(errorMsg);
-        loggingService.error('wp-api', `Detection error: ${errorMsg}`);
-      }
+      loggingService.warning('wp-api', 'REST API not accessible - trying HTML detection');
+      result.errors?.push(`REST API: ${axiosError.message || 'Not accessible'}`);
     }
 
+    // Method 2: HTML-based detection (fallback - BuiltWith method)
+    try {
+      loggingService.info('wp-api', 'Attempting HTML-based WordPress detection...');
+
+      const htmlResponse = await axios.get(siteUrl, {
+        timeout: 5000,
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        }
+      });
+
+      const html = htmlResponse.data;
+      let confidence = 0;
+      const indicators: string[] = [];
+
+      // Check for WordPress meta generator tag
+      if (html.includes('generator" content="WordPress')) {
+        confidence += 40;
+        indicators.push('meta generator tag');
+
+        // Extract version
+        const versionMatch = html.match(/WordPress\s+([\d.]+)/);
+        if (versionMatch) {
+          result.version = versionMatch[1];
+        }
+      }
+
+      // Check for wp-content path
+      if (html.includes('/wp-content/') || html.includes('wp-content')) {
+        confidence += 20;
+        indicators.push('wp-content directory');
+      }
+
+      // Check for wp-includes path
+      if (html.includes('/wp-includes/') || html.includes('wp-includes')) {
+        confidence += 15;
+        indicators.push('wp-includes directory');
+      }
+
+      // Check for WordPress classes
+      if (html.includes('class="wp-') || html.includes('wp-block-')) {
+        confidence += 15;
+        indicators.push('WordPress CSS classes');
+      }
+
+      // Check for common WordPress patterns
+      if (html.includes('wp-json') || html.includes('wp_') || html.includes('wordpress')) {
+        confidence += 10;
+        indicators.push('WordPress identifiers');
+      }
+
+      // If confidence is high enough, mark as WordPress
+      if (confidence >= 50) {
+        result.isWordPress = true;
+        result.confidence = confidence;
+
+        loggingService.success(
+          'wp-api',
+          `✓ WordPress detected via HTML analysis (${confidence}% confidence): ${indicators.join(', ')}`
+        );
+
+        // Note: REST API not available
+        loggingService.warning(
+          'wp-api',
+          'Note: REST API is disabled - will use HTML parsing instead of native blocks'
+        );
+
+        // Try to detect page builder even without REST API
+        try {
+          result.pageBuilder = await this.detectPageBuilder(siteUrl);
+        } catch (error) {
+          loggingService.warning('wp-api', 'Could not detect page builder');
+        }
+
+        return result;
+      } else {
+        loggingService.info('wp-api', `Not enough WordPress indicators (${confidence}% confidence)`);
+      }
+    } catch (error) {
+      const axiosError = error as AxiosError;
+      const errorMsg = axiosError.message || 'HTML fetch failed';
+      result.errors?.push(`HTML Detection: ${errorMsg}`);
+      loggingService.error('wp-api', `HTML detection failed: ${errorMsg}`);
+    }
+
+    // Not WordPress
+    loggingService.info('wp-api', 'Not a WordPress site');
     return result;
   }
 

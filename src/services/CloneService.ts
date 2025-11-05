@@ -317,9 +317,50 @@ export class CloneService {
         };
 
         loggingService.success('clone', `WordPress clone complete: ${wpCloneResult.postsCloned} posts, ${wpCloneResult.pagesCloned} pages, ${wpCloneResult.blocksCount} blocks parsed`, { projectId });
+      } else if (wpDetection.isWordPress && !wpDetection.apiUrl) {
+        // WordPress detected via HTML but REST API is disabled
+        console.log('[WordPress] ✓ WordPress detected via HTML analysis');
+        console.log(`[WordPress] Confidence: ${wpDetection.confidence}%`);
+        console.log('[WordPress] REST API is disabled - using standard HTML parsing');
+
+        if (wpDetection.version) {
+          console.log(`[WordPress] Version: ${wpDetection.version}`);
+        }
+
+        if (wpDetection.pageBuilder?.isActive) {
+          console.log(`[WordPress] Page Builder: ${wpDetection.pageBuilder.name}`);
+          project.currentStep = `WordPress detected (REST API disabled): ${wpDetection.pageBuilder.name}`;
+          options.onProgress?.(30, `✓ WordPress detected via HTML - ${wpDetection.pageBuilder.name} page builder (REST API disabled)`);
+        } else {
+          project.currentStep = 'WordPress detected (REST API disabled)';
+          options.onProgress?.(30, '✓ WordPress detected via HTML - REST API disabled, using HTML parsing');
+        }
+
+        loggingService.warning('clone', 'WordPress detected but REST API is disabled - falling back to HTML parsing', {
+          projectId,
+          version: wpDetection.version,
+          confidence: wpDetection.confidence
+        });
+
+        // Store WordPress detection data (no posts/pages since REST API is disabled)
+        if (!project.metadata) {
+          project.metadata = {} as WebsiteMetadata;
+        }
+
+        project.metadata.wordPressData = {
+          isWordPress: true,
+          version: wpDetection.version,
+          apiUrl: undefined,
+          siteName: undefined,
+          pageBuilder: wpDetection.pageBuilder?.name || 'unknown',
+          postsCloned: 0,
+          pagesCloned: 0,
+          blocksCount: 0,
+          posts: [],
+        };
       } else {
-        // Not WordPress or REST API disabled
-        console.log('[WordPress] Not a WordPress site or REST API is disabled');
+        // Not WordPress
+        console.log('[WordPress] Not a WordPress site');
         project.currentStep = 'Not WordPress - using standard HTML parsing';
         options.onProgress?.(30, '✓ Not WordPress - proceeding with standard HTML parsing');
       }
