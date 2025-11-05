@@ -86,21 +86,52 @@ A professional web application that clones websites, optimizes their performance
 - DNS prefetch for external domains
 - Preconnect to required origins
 
-### WordPress Page Builders
+### WordPress Page Builders (🆕 Unified System)
 
-Export your cloned website to any of these popular WordPress builders:
+Export your cloned website to any of these 11 popular WordPress builders using our **unified builder system**:
 
-1. **Elementor** - Most popular page builder with JSON export
-2. **Gutenberg** - WordPress core block editor
-3. **Divi Builder** - Shortcode-based builder
-4. **Beaver Builder** - Drag-and-drop page builder
-5. **Bricks Builder** - Modern visual builder
-6. **Oxygen Builder** - Developer-friendly builder
-7. **Brizy** - User-friendly page builder
-8. **Crocoblock (JetEngine)** - Dynamic content builder
-9. **Kadence Blocks** - Gutenberg block library
-10. **GenerateBlocks** - Lightweight block collection
-11. **OptimizePress** - Marketing-focused builder
+| Builder | Format | Use Case | Export Method |
+|---------|--------|----------|---------------|
+| **Elementor** | JSON | Most popular drag-and-drop builder | Native blocks + Playwright fallback |
+| **Gutenberg** | HTML | WordPress core block editor | Native blocks pass-through |
+| **Divi Builder** | Shortcode | Elegant Themes page builder | Native blocks + computed styles |
+| **Beaver Builder** | Shortcode | Professional drag-and-drop | Native blocks + fallback |
+| **Bricks** | JSON | Modern visual site builder | Native blocks + computed styles |
+| **Oxygen** | JSON | Developer-friendly visual builder | Native blocks + fallback |
+| **Kadence** | HTML | Gutenberg-enhanced blocks | Native blocks + styling |
+| **Brizy** | JSON | Next-gen website builder | Native blocks + fallback |
+| **Plugin-Free** | HTML | Lightweight, no dependencies | Pure semantic HTML |
+| **OptimizePress** | Shortcode | Landing pages & sales funnels | Native blocks + fallback |
+| **Crocoblock** | JSON | Dynamic content & custom post types | Native blocks + JetEngine |
+
+#### 🎯 Dual Input System
+
+Each builder supports **two conversion methods** for maximum compatibility:
+
+1. **Native WordPress Blocks (BEST)** - Perfect block-to-widget mapping from REST API
+   ```typescript
+   const result = await unifiedExportService.export({
+     builderName: 'elementor',
+     nativeBlocks: blocks // From WordPress REST API
+   });
+   ```
+
+2. **Playwright Fallback** - Uses computed styles when REST API is blocked
+   ```typescript
+   const result = await unifiedExportService.export({
+     builderName: 'elementor',
+     playwrightData: pageData // From browser extraction
+   });
+   ```
+
+#### 📚 Usage Guide
+
+See [BUILDER_USAGE_GUIDE.md](./BUILDER_USAGE_GUIDE.md) for:
+- Complete API documentation
+- Code examples for all 11 builders
+- Best practices and troubleshooting
+- Block type support matrix
+- Advanced features and customization
 
 ## Tech Stack
 
