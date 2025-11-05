@@ -1,9 +1,13 @@
+import { Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { Navbar } from './components/layout/Navbar';
 import { DashboardNav } from './components/layout/DashboardNav';
 import { Footer } from './components/layout/Footer';
 import { ProtectedRoute } from './components/security/ProtectedRoute';
+import { ErrorBoundary } from './components/ErrorBoundary';
+import { LoadingFallback } from './components/LoadingFallback';
+import { ScrollToTop } from './components/ScrollToTop';
 
 // New Pages (bolt.new spec)
 import { Home } from './pages/Home';
@@ -38,13 +42,16 @@ import { TechnologyDetectionFeature } from './pages/features/TechnologyDetection
 
 function App() {
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <div className="min-h-screen flex flex-col">
-          <Navbar />
-          <DashboardNav />
-          <main className="flex-1">
-            <Routes>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <ScrollToTop />
+        <AuthProvider>
+          <div className="min-h-screen flex flex-col">
+            <Navbar />
+            <DashboardNav />
+            <main className="flex-1">
+              <Suspense fallback={<LoadingFallback />}>
+                <Routes>
               {/* Public Routes */}
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
@@ -219,12 +226,14 @@ function App() {
 
               {/* Fallback */}
               <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </main>
-          <Footer />
-        </div>
-      </AuthProvider>
-    </BrowserRouter>
+                </Routes>
+              </Suspense>
+            </main>
+            <Footer />
+          </div>
+        </AuthProvider>
+      </BrowserRouter>
+    </ErrorBoundary>
   );
 }
 
