@@ -5,19 +5,18 @@ import type {
   PageBuilder,
 } from '../../types/wordpress-export.types';
 
-import { PluginFreeThemeBuilder } from './builders/PluginFreeThemeBuilder';
-import { ElementorBuilder } from './builders/ElementorBuilder';
-import { GutenbergBuilder } from './builders/GutenbergBuilder';
-import {
-  DiviBuilder,
-  BeaverBuilderBuilder,
-  BricksBuilder,
-  OxygenBuilder,
-  KadenceBuilder,
-  BrizyBuilder,
-  OptimizePressBuilder,
-  CrocoblockBuilder,
-} from './builders';
+// Import unified builders
+import { unifiedPluginFreeThemeBuilder } from './builders/UnifiedPluginFreeThemeBuilder';
+import { unifiedElementorBuilder } from './builders/UnifiedElementorBuilder';
+import { unifiedGutenbergBuilder } from './builders/UnifiedGutenbergBuilder';
+import { unifiedDiviBuilder } from './builders/UnifiedDiviBuilder';
+import { unifiedBeaverBuilderBuilder } from './builders/UnifiedBeaverBuilderBuilder';
+import { unifiedBricksBuilder } from './builders/UnifiedBricksBuilder';
+import { unifiedOxygenBuilder } from './builders/UnifiedOxygenBuilder';
+import { unifiedKadenceBuilder } from './builders/UnifiedKadenceBuilder';
+import { unifiedBrizyBuilder } from './builders/UnifiedBrizyBuilder';
+import { unifiedOptimizePressBuilder } from './builders/UnifiedOptimizePressBuilder';
+import { unifiedCrocoblockBuilder } from './builders/UnifiedCrocoblockBuilder';
 
 import { PluginFreeVerificationService } from './PluginFreeVerificationService';
 import { DependencyEliminationService } from './DependencyEliminationService';
@@ -33,17 +32,17 @@ export class WordPressExportService {
 
   constructor() {
     this.builders = new Map([
-      ['plugin-free', new PluginFreeThemeBuilder()],
-      ['elementor', new ElementorBuilder()],
-      ['gutenberg', new GutenbergBuilder()],
-      ['divi', new DiviBuilder()],
-      ['beaver-builder', new BeaverBuilderBuilder()],
-      ['bricks', new BricksBuilder()],
-      ['oxygen', new OxygenBuilder()],
-      ['kadence', new KadenceBuilder()],
-      ['brizy', new BrizyBuilder()],
-      ['optimizepress', new OptimizePressBuilder()],
-      ['crocoblock', new CrocoblockBuilder()],
+      ['plugin-free', unifiedPluginFreeThemeBuilder],
+      ['elementor', unifiedElementorBuilder],
+      ['gutenberg', unifiedGutenbergBuilder],
+      ['divi', unifiedDiviBuilder],
+      ['beaver-builder', unifiedBeaverBuilderBuilder],
+      ['bricks', unifiedBricksBuilder],
+      ['oxygen', unifiedOxygenBuilder],
+      ['kadence', unifiedKadenceBuilder],
+      ['brizy', unifiedBrizyBuilder],
+      ['optimizepress', unifiedOptimizePressBuilder],
+      ['crocoblock', unifiedCrocoblockBuilder],
     ]);
 
     this.verificationService = new PluginFreeVerificationService();
