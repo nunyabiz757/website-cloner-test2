@@ -107,16 +107,44 @@ export default async function handler(req, res) {
 
     console.log('🖼️  [IMAGES] Waiting for images to fully load...');
     const imgStart = Date.now();
-    const imgCount = await page.evaluate(() => {
-      return Promise.all(
-        Array.from(document.images)
-          .filter(img => !img.complete)
-          .map(img => new Promise(resolve => {
-            img.onload = img.onerror = resolve;
+    const imgResult = await page.evaluate(() => {
+      const totalImages = document.images.length;
+      const incompleteImages = Array.from(document.images).filter(img => !img.complete);
+
+      console.log(`[IMAGES] Total images: ${totalImages}, Incomplete: ${incompleteImages.length}`);
+
+      // Wait for images with a 5-second timeout
+      return Promise.race([
+        // Try to load all incomplete images
+        Promise.all(
+          incompleteImages.map((img, index) => new Promise(resolve => {
+            const timeout = setTimeout(() => {
+              console.log(`[IMAGES] Timeout waiting for image ${index + 1}: ${img.src?.substring(0, 100)}`);
+              resolve('timeout');
+            }, 5000);
+
+            img.onload = () => {
+              clearTimeout(timeout);
+              resolve('loaded');
+            };
+            img.onerror = () => {
+              clearTimeout(timeout);
+              console.log(`[IMAGES] Failed to load image ${index + 1}: ${img.src?.substring(0, 100)}`);
+              resolve('error');
+            };
           }))
-      ).then(results => document.images.length);
+        ),
+        // Or timeout after 5 seconds total
+        new Promise(resolve => setTimeout(() => {
+          console.log('[IMAGES] 5-second overall timeout reached');
+          resolve('overall-timeout');
+        }, 5000))
+      ]).then(() => ({
+        total: totalImages,
+        incomplete: incompleteImages.length
+      }));
     });
-    console.log(`✅ [IMAGES] ${imgCount} images loaded in ${Date.now() - imgStart}ms`);
+    console.log(`✅ [IMAGES] ${imgResult.total} total images (${imgResult.incomplete} were incomplete) - completed in ${Date.now() - imgStart}ms`);
 
     console.log('📜 [SCROLL] Scrolling to trigger lazy loading...');
     const scrollStart = Date.now();
