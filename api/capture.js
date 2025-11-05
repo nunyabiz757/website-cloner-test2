@@ -40,7 +40,11 @@ export default async function handler(req, res) {
   let browser;
 
   try {
-    console.log('Launching Chromium browser for:', url);
+    console.log('🚀 [CAPTURE] Starting capture for:', url);
+    console.log('⚙️  [CAPTURE] Options:', { responsive, interactive, animations, styleAnalysis, navigation, extractStyles, takeScreenshot, fullPage });
+
+    const startTime = Date.now();
+    console.log('🌐 [BROWSER] Launching Chromium browser...');
 
     // Launch full Chromium with Playwright (Railway supports this!)
     browser = await chromium.launch({
@@ -51,13 +55,20 @@ export default async function handler(req, res) {
         '--no-sandbox',
       ],
     });
+    console.log(`✅ [BROWSER] Browser launched in ${Date.now() - startTime}ms`);
 
+    const contextStart = Date.now();
+    console.log('📱 [BROWSER] Creating browser context...');
     const context = await browser.newContext({
       viewport: { width: 1920, height: 1080 },
       userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
     });
+    console.log(`✅ [BROWSER] Context created in ${Date.now() - contextStart}ms`);
 
+    const pageStart = Date.now();
+    console.log('📄 [BROWSER] Creating new page...');
     const page = await context.newPage();
+    console.log(`✅ [BROWSER] Page created in ${Date.now() - pageStart}ms`);
 
     // Track resources
     const resources = {
@@ -79,27 +90,36 @@ export default async function handler(req, res) {
       }
     });
 
-    console.log('Navigating to URL...');
+    const navStart = Date.now();
+    console.log('🌍 [NAVIGATE] Navigating to URL:', url);
+    console.log('⏱️  [NAVIGATE] Timeout set to 60s, waiting for networkidle...');
+
     await page.goto(url, {
       waitUntil: 'networkidle',
       timeout: 60000,
     });
+    console.log(`✅ [NAVIGATE] Page loaded in ${Date.now() - navStart}ms`);
 
-    // Wait for lazy-loaded content and images
+    console.log('⏳ [WAIT] Waiting 2s for lazy-loaded content...');
+    const waitStart = Date.now();
     await page.waitForTimeout(2000);
+    console.log(`✅ [WAIT] Wait completed in ${Date.now() - waitStart}ms`);
 
-    // Wait for images to fully load (especially logos)
-    await page.evaluate(() => {
+    console.log('🖼️  [IMAGES] Waiting for images to fully load...');
+    const imgStart = Date.now();
+    const imgCount = await page.evaluate(() => {
       return Promise.all(
         Array.from(document.images)
           .filter(img => !img.complete)
           .map(img => new Promise(resolve => {
             img.onload = img.onerror = resolve;
           }))
-      );
+      ).then(results => document.images.length);
     });
+    console.log(`✅ [IMAGES] ${imgCount} images loaded in ${Date.now() - imgStart}ms`);
 
-    // Scroll to bottom to trigger lazy loading
+    console.log('📜 [SCROLL] Scrolling to trigger lazy loading...');
+    const scrollStart = Date.now();
     await page.evaluate(async () => {
       await new Promise((resolve) => {
         let totalHeight = 0;
@@ -116,11 +136,13 @@ export default async function handler(req, res) {
         }, 100);
       });
     });
+    console.log(`✅ [SCROLL] Scrolling completed in ${Date.now() - scrollStart}ms`);
 
-    // Scroll back to top
+    console.log('⬆️  [SCROLL] Scrolling back to top...');
     await page.evaluate(() => window.scrollTo(0, 0));
 
-    // Extract HTML with enhanced SVG and icon detection
+    console.log('📝 [EXTRACT] Extracting HTML...');
+    const htmlStart = Date.now();
     const html = await page.evaluate(() => {
       // Convert all SVGs to inline to preserve them
       document.querySelectorAll('svg').forEach(svg => {
@@ -166,8 +188,10 @@ export default async function handler(req, res) {
 
       return document.documentElement.outerHTML;
     });
+    console.log(`✅ [EXTRACT] HTML extracted (${(html.length / 1024).toFixed(2)} KB) in ${Date.now() - htmlStart}ms`);
 
-    // Extract CSS
+    console.log('🎨 [EXTRACT] Extracting CSS styles...');
+    const cssStart = Date.now();
     const styles = await page.evaluate(() => {
       let allStyles = '';
 
@@ -195,14 +219,18 @@ export default async function handler(req, res) {
 
       return allStyles;
     });
+    console.log(`✅ [EXTRACT] CSS extracted (${(styles.length / 1024).toFixed(2)} KB) in ${Date.now() - cssStart}ms`);
 
-    // Extract scripts
+    console.log('📜 [EXTRACT] Extracting scripts...');
+    const scriptsStart = Date.now();
     const scripts = await page.evaluate(() => {
       return Array.from(document.querySelectorAll('script[src]'))
         .map((script) => script.src);
     });
+    console.log(`✅ [EXTRACT] ${scripts.length} scripts extracted in ${Date.now() - scriptsStart}ms`);
 
-    // Extract background images (logos are often background images)
+    console.log('🖼️  [EXTRACT] Extracting background images...');
+    const bgStart = Date.now();
     const backgroundImages = await page.evaluate(() => {
       const bgImages = [];
       const elements = document.querySelectorAll('*');
@@ -228,8 +256,10 @@ export default async function handler(req, res) {
 
       return bgImages;
     });
+    console.log(`✅ [EXTRACT] ${backgroundImages.length} background images extracted in ${Date.now() - bgStart}ms`);
 
-    // Detect icon fonts
+    console.log('🎨 [EXTRACT] Detecting icon fonts...');
+    const iconStart = Date.now();
     const iconFonts = await page.evaluate(() => {
       const fonts = new Set();
       const elements = document.querySelectorAll('*');
@@ -251,6 +281,7 @@ export default async function handler(req, res) {
 
       return Array.from(fonts);
     });
+    console.log(`✅ [EXTRACT] ${iconFonts.length} icon fonts detected in ${Date.now() - iconStart}ms`);
 
     // Extract elements with computed styles if requested
     let elements = [];
@@ -258,7 +289,8 @@ export default async function handler(req, res) {
     let pageMeta = {};
 
     if (extractStyles) {
-      console.log('🎨 Extracting elements with computed styles...');
+      console.log('🔍 [ELEMENTS] Extracting elements with computed styles...');
+      const elemStart = Date.now();
 
       const extractionResult = await page.evaluate(() => {
         const allElements = Array.from(document.querySelectorAll('body *'));
@@ -347,22 +379,26 @@ export default async function handler(req, res) {
       pageTitle = extractionResult.title;
       pageMeta = extractionResult.meta;
 
-      console.log(`✓ Extracted ${elements.length} elements with computed styles`);
+      console.log(`✅ [ELEMENTS] Extracted ${elements.length} elements in ${Date.now() - elemStart}ms`);
     }
 
     // Take screenshot if requested
     let screenshot = null;
     if (takeScreenshot) {
-      console.log('📸 Taking screenshot...');
+      console.log('📸 [SCREENSHOT] Taking screenshot...');
+      const screenshotStart = Date.now();
       const screenshotBuffer = await page.screenshot({
         type: 'png',
         fullPage: fullPage,
       });
       screenshot = screenshotBuffer.toString('base64');
-      console.log('✓ Screenshot captured');
+      console.log(`✅ [SCREENSHOT] Screenshot captured (${(screenshot.length / 1024).toFixed(2)} KB) in ${Date.now() - screenshotStart}ms`);
     }
 
-    console.log('✅ Page captured successfully');
+    const totalTime = Date.now() - startTime;
+    console.log('');
+    console.log('🎉 ===== CAPTURE COMPLETE =====');
+    console.log(`⏱️  Total time: ${totalTime}ms (${(totalTime / 1000).toFixed(2)}s)`);
     console.log(`📄 HTML length: ${html.length} chars`);
     console.log(`🎨 CSS length: ${styles.length} chars`);
     console.log(`📦 Resources: ${resources.images.length} images, ${resources.fonts.length} fonts`);
@@ -1294,15 +1330,25 @@ export default async function handler(req, res) {
 
     return res.status(200).json(response);
   } catch (error) {
-    console.error('❌ Failed to capture page:', error);
+    console.error('');
+    console.error('❌ ===== CAPTURE FAILED =====');
+    console.error('Error:', error);
+    console.error('Error message:', error instanceof Error ? error.message : 'Unknown error');
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+    console.error('URL:', url);
+    console.error('============================');
+    console.error('');
 
     if (browser) {
+      console.log('🧹 Closing browser...');
       await browser.close();
+      console.log('✅ Browser closed');
     }
 
     return res.status(500).json({
       error: 'Failed to capture page',
       message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
     });
   }
 }
