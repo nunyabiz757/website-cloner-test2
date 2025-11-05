@@ -89,6 +89,7 @@ export class WordPressAPIService {
 
       if (providedHtml) {
         console.log('[WordPress] Using pre-fetched HTML (bypassing CORS)');
+        console.log(`[WordPress] HTML length: ${providedHtml.length} characters`);
         html = providedHtml;
       } else {
         console.log('[WordPress] Fetching HTML via axios...');
@@ -99,7 +100,13 @@ export class WordPressAPIService {
           }
         });
         html = htmlResponse.data;
+        console.log(`[WordPress] HTML length: ${html.length} characters`);
       }
+
+      // Debug: Log sample of HTML for analysis
+      const htmlSample = html.substring(0, 2000);
+      console.log('[WordPress] HTML sample (first 2000 chars):', htmlSample);
+
       let confidence = 0;
       const indicators: string[] = [];
 
