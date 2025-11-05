@@ -129,6 +129,14 @@ export class WordPressAPIService {
         indicators.push('WordPress identifiers');
       }
 
+      // Log what we found
+      console.log(`[WordPress] HTML analysis complete: ${confidence}% confidence`);
+      if (indicators.length > 0) {
+        console.log(`[WordPress] Indicators found: ${indicators.join(', ')}`);
+      } else {
+        console.log('[WordPress] No WordPress indicators found in HTML');
+      }
+
       // If confidence is high enough, mark as WordPress
       if (confidence >= 50) {
         result.isWordPress = true;
@@ -163,11 +171,13 @@ export class WordPressAPIService {
     } catch (error) {
       const axiosError = error as AxiosError;
       const errorMsg = axiosError.message || 'HTML fetch failed';
+      console.log(`[WordPress] HTML detection error: ${errorMsg}`);
       result.errors?.push(`HTML Detection: ${errorMsg}`);
       loggingService.error('wp-api', `HTML detection failed: ${errorMsg}`);
     }
 
     // Not WordPress
+    console.log('[WordPress] Not a WordPress site (no REST API, HTML detection failed or confidence too low)');
     loggingService.info('wp-api', 'Not a WordPress site');
     return result;
   }
