@@ -187,7 +187,7 @@ export class BrowserService {
       // Call Railway API endpoint (Playwright runs on Railway, not Vercel)
       const apiUrl = import.meta.env.VITE_RAILWAY_API_URL
         ? `${import.meta.env.VITE_RAILWAY_API_URL}/api/capture`
-        : '/api/capture'; // Fallback for local development
+        : 'https://website-cloner-pro-production.up.railway.app/api/capture'; // Railway production endpoint
 
       console.log(`📡 Calling Railway API: ${apiUrl}`);
 
@@ -234,7 +234,7 @@ export class BrowserService {
       // Call Railway API endpoint with responsive flag
       const apiUrl = import.meta.env.VITE_RAILWAY_API_URL
         ? `${import.meta.env.VITE_RAILWAY_API_URL}/api/capture`
-        : '/api/capture';
+        : 'https://website-cloner-pro-production.up.railway.app/api/capture';
 
       const response = await fetch(apiUrl, {
         method: 'POST',
@@ -277,7 +277,7 @@ export class BrowserService {
     try {
       const apiUrl = import.meta.env.VITE_RAILWAY_API_URL
         ? `${import.meta.env.VITE_RAILWAY_API_URL}/api/capture`
-        : '/api/capture';
+        : 'https://website-cloner-pro-production.up.railway.app/api/capture';
 
       const response = await fetch(apiUrl, {
         method: 'POST',
@@ -319,7 +319,7 @@ export class BrowserService {
     try {
       const apiUrl = import.meta.env.VITE_RAILWAY_API_URL
         ? `${import.meta.env.VITE_RAILWAY_API_URL}/api/capture`
-        : '/api/capture';
+        : 'https://website-cloner-pro-production.up.railway.app/api/capture';
 
       const response = await fetch(apiUrl, {
         method: 'POST',
@@ -361,7 +361,7 @@ export class BrowserService {
     try {
       const apiUrl = import.meta.env.VITE_RAILWAY_API_URL
         ? `${import.meta.env.VITE_RAILWAY_API_URL}/api/capture`
-        : '/api/capture';
+        : 'https://website-cloner-pro-production.up.railway.app/api/capture';
 
       const response = await fetch(apiUrl, {
         method: 'POST',
@@ -404,7 +404,7 @@ export class BrowserService {
     try {
       const apiUrl = import.meta.env.VITE_RAILWAY_API_URL
         ? `${import.meta.env.VITE_RAILWAY_API_URL}/api/capture`
-        : '/api/capture';
+        : 'https://website-cloner-pro-production.up.railway.app/api/capture';
 
       const response = await fetch(apiUrl, {
         method: 'POST',
