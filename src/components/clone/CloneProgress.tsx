@@ -18,6 +18,9 @@ export function CloneProgress({
   logs,
   estimatedTimeRemaining
 }: CloneProgressProps) {
+  // Ensure logs is always an array
+  const safeLogs = logs || [];
+
   const steps = [
     { name: 'Fetch', range: [0, 20] },
     { name: 'Parse', range: [20, 40] },
@@ -171,14 +174,14 @@ export function CloneProgress({
       <div>
         <div className="flex items-center justify-between mb-3">
           <h4 className="text-sm font-semibold text-gray-700">Activity Log</h4>
-          <span className="text-xs text-gray-500">{logs.length} events</span>
+          <span className="text-xs text-gray-500">{safeLogs.length} events</span>
         </div>
         <div className="bg-gray-900 rounded-lg p-4 max-h-80 overflow-y-auto font-mono text-sm">
-          {logs.length === 0 ? (
+          {safeLogs.length === 0 ? (
             <p className="text-gray-500">Waiting for activity...</p>
           ) : (
             <div className="space-y-1">
-              {logs.map((log, index) => {
+              {safeLogs.map((log, index) => {
                 // Detect log type by content
                 const isWordPress = log.includes('[WordPress]');
                 const isService = log.includes('[Service]');
