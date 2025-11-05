@@ -72,12 +72,14 @@ export class WordPressAPIService {
       }
     } catch (error) {
       const axiosError = error as AxiosError;
+      console.log('[WordPress] REST API not accessible - trying HTML detection...');
       loggingService.warning('wp-api', 'REST API not accessible - trying HTML detection');
       result.errors?.push(`REST API: ${axiosError.message || 'Not accessible'}`);
     }
 
     // Method 2: HTML-based detection (fallback - BuiltWith method)
     try {
+      console.log('[WordPress] Attempting HTML-based WordPress detection...');
       loggingService.info('wp-api', 'Attempting HTML-based WordPress detection...');
 
       const htmlResponse = await axios.get(siteUrl, {
@@ -132,12 +134,15 @@ export class WordPressAPIService {
         result.isWordPress = true;
         result.confidence = confidence;
 
+        console.log(`[WordPress] ✓ WordPress detected via HTML analysis (${confidence}% confidence)`);
+        console.log(`[WordPress] Indicators found: ${indicators.join(', ')}`);
         loggingService.success(
           'wp-api',
           `✓ WordPress detected via HTML analysis (${confidence}% confidence): ${indicators.join(', ')}`
         );
 
         // Note: REST API not available
+        console.log('[WordPress] Note: REST API is disabled - will use HTML parsing instead of native blocks');
         loggingService.warning(
           'wp-api',
           'Note: REST API is disabled - will use HTML parsing instead of native blocks'
@@ -152,6 +157,7 @@ export class WordPressAPIService {
 
         return result;
       } else {
+        console.log(`[WordPress] Not enough WordPress indicators found (${confidence}% confidence, need 50%)`);
         loggingService.info('wp-api', `Not enough WordPress indicators (${confidence}% confidence)`);
       }
     } catch (error) {
