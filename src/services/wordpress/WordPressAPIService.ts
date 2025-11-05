@@ -25,8 +25,11 @@ export class WordPressAPIService {
    * Uses multiple detection methods:
    * 1. REST API endpoint (best - allows native block parsing)
    * 2. HTML meta tags and content (fallback - BuiltWith method)
+   *
+   * @param url - URL to detect
+   * @param providedHtml - Optional pre-fetched HTML (avoids CORS issues)
    */
-  async detectWordPress(url: string): Promise<WordPressDetectionResult> {
+  async detectWordPress(url: string, providedHtml?: string): Promise<WordPressDetectionResult> {
     loggingService.info('wp-api', `Detecting WordPress at ${url}`);
 
     const result: WordPressDetectionResult = {
@@ -82,14 +85,21 @@ export class WordPressAPIService {
       console.log('[WordPress] Attempting HTML-based WordPress detection...');
       loggingService.info('wp-api', 'Attempting HTML-based WordPress detection...');
 
-      const htmlResponse = await axios.get(siteUrl, {
-        timeout: 5000,
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-        }
-      });
+      let html: string;
 
-      const html = htmlResponse.data;
+      if (providedHtml) {
+        console.log('[WordPress] Using pre-fetched HTML (bypassing CORS)');
+        html = providedHtml;
+      } else {
+        console.log('[WordPress] Fetching HTML via axios...');
+        const htmlResponse = await axios.get(siteUrl, {
+          timeout: 5000,
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+          }
+        });
+        html = htmlResponse.data;
+      }
       let confidence = 0;
       const indicators: string[] = [];
 

@@ -237,7 +237,7 @@ export class CloneService {
       options.onProgress?.(25, '🔍 Detecting WordPress via REST API...');
 
       console.log('[WordPress] Probing /wp-json/ endpoint...');
-      const wpDetection = await wordPressAPIService.detectWordPress(options.source);
+      const wpDetection = await wordPressAPIService.detectWordPress(options.source, html);
 
       if (wpDetection.isWordPress && wpDetection.apiUrl) {
         // WordPress detected - detailed logging
