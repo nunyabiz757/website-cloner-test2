@@ -20,7 +20,18 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { url, responsive = false, interactive = false, animations = false, styleAnalysis = false, navigation = false, breakpoints = DEFAULT_BREAKPOINTS } = req.body;
+  const {
+    url,
+    responsive = false,
+    interactive = false,
+    animations = false,
+    styleAnalysis = false,
+    navigation = false,
+    extractStyles = true,
+    takeScreenshot = false,
+    fullPage = false,
+    breakpoints = DEFAULT_BREAKPOINTS
+  } = req.body;
 
   if (!url) {
     return res.status(400).json({ error: 'URL is required' });
@@ -240,6 +251,116 @@ export default async function handler(req, res) {
 
       return Array.from(fonts);
     });
+
+    // Extract elements with computed styles if requested
+    let elements = [];
+    let pageTitle = '';
+    let pageMeta = {};
+
+    if (extractStyles) {
+      console.log('🎨 Extracting elements with computed styles...');
+
+      const extractionResult = await page.evaluate(() => {
+        const allElements = Array.from(document.querySelectorAll('body *'));
+
+        const elementData = allElements
+          .filter((el) => {
+            const tag = el.tagName.toLowerCase();
+            if (tag === 'script' || tag === 'style' || tag === 'noscript') {
+              return false;
+            }
+            const style = window.getComputedStyle(el);
+            if (style.display === 'none' || style.visibility === 'hidden') {
+              return false;
+            }
+            return true;
+          })
+          .slice(0, 500) // Limit to 500 elements for performance
+          .map((el) => {
+            const rect = el.getBoundingClientRect();
+            const style = window.getComputedStyle(el);
+
+            const attributes = {};
+            Array.from(el.attributes).forEach((attr) => {
+              attributes[attr.name] = attr.value;
+            });
+
+            return {
+              tag: el.tagName.toLowerCase(),
+              classes: el.className,
+              id: el.id,
+              text: el.textContent?.trim().substring(0, 200) || '',
+              attributes,
+              position: {
+                x: rect.x,
+                y: rect.y,
+                width: rect.width,
+                height: rect.height,
+              },
+              styles: {
+                display: style.display,
+                position: style.position,
+                backgroundColor: style.backgroundColor,
+                color: style.color,
+                fontSize: style.fontSize,
+                fontWeight: style.fontWeight,
+                textAlign: style.textAlign,
+                padding: style.padding,
+                margin: style.margin,
+                border: style.border,
+                borderRadius: style.borderRadius,
+                width: style.width,
+                height: style.height,
+              },
+              isVisible: rect.width > 0 && rect.height > 0,
+            };
+          });
+
+        // Extract page meta
+        const getMetaContent = (name) => {
+          const meta = document.querySelector(`meta[name="${name}"]`);
+          return meta?.getAttribute('content') || '';
+        };
+
+        const getOgContent = (property) => {
+          const meta = document.querySelector(`meta[property="${property}"]`);
+          return meta?.getAttribute('content') || '';
+        };
+
+        return {
+          elements: elementData,
+          title: document.title,
+          meta: {
+            description: getMetaContent('description'),
+            keywords: getMetaContent('keywords'),
+            ogImage: getOgContent('og:image'),
+            ogTitle: getOgContent('og:title'),
+            viewport: {
+              width: window.innerWidth,
+              height: window.innerHeight,
+            },
+          },
+        };
+      });
+
+      elements = extractionResult.elements;
+      pageTitle = extractionResult.title;
+      pageMeta = extractionResult.meta;
+
+      console.log(`✓ Extracted ${elements.length} elements with computed styles`);
+    }
+
+    // Take screenshot if requested
+    let screenshot = null;
+    if (takeScreenshot) {
+      console.log('📸 Taking screenshot...');
+      const screenshotBuffer = await page.screenshot({
+        type: 'png',
+        fullPage: fullPage,
+      });
+      screenshot = screenshotBuffer.toString('base64');
+      console.log('✓ Screenshot captured');
+    }
 
     console.log('✅ Page captured successfully');
     console.log(`📄 HTML length: ${html.length} chars`);
@@ -1130,12 +1251,17 @@ export default async function handler(req, res) {
     await browser.close();
 
     const response = {
+      url,
+      title: pageTitle || '',
       html,
       styles,
       scripts,
       resources,
       backgroundImages,
       iconFonts,
+      elements: elements || [],
+      meta: pageMeta || {},
+      screenshot: screenshot || null,
     };
 
     // Add responsive data if captured

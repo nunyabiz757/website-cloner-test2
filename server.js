@@ -73,6 +73,51 @@ app.post('/api/capture', async (req, res) => {
   }
 });
 
+// API route for WordPress detection
+app.post('/api/detect-wordpress', async (req, res) => {
+  try {
+    console.log('📥 WordPress detection request for:', req.body?.url);
+    const { default: detectWordPress } = await import('./api/detect-wordpress.js');
+    await detectWordPress(req, res);
+  } catch (error) {
+    console.error('❌ WordPress detection error:', error);
+    res.status(500).json({
+      error: 'WordPress detection failed',
+      message: error.message
+    });
+  }
+});
+
+// API route for getting computed style
+app.post('/api/get-style', async (req, res) => {
+  try {
+    console.log('📥 Get style request for:', req.body?.url);
+    const { default: getStyle } = await import('./api/get-style.js');
+    await getStyle(req, res);
+  } catch (error) {
+    console.error('❌ Get style error:', error);
+    res.status(500).json({
+      error: 'Get style failed',
+      message: error.message
+    });
+  }
+});
+
+// API route for checking element visibility
+app.post('/api/is-visible', async (req, res) => {
+  try {
+    console.log('📥 Is visible request for:', req.body?.url);
+    const { default: isVisible } = await import('./api/is-visible.js');
+    await isVisible(req, res);
+  } catch (error) {
+    console.error('❌ Is visible error:', error);
+    res.status(500).json({
+      error: 'Is visible check failed',
+      message: error.message
+    });
+  }
+});
+
 // Serve static files from the dist directory
 // This will serve index.html for '/' automatically
 app.use(express.static(join(__dirname, 'dist')));
@@ -95,7 +140,11 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   console.log(`🌐 Server running on http://0.0.0.0:${PORT}`);
   console.log(`📦 Serving static files from: ${join(__dirname, 'dist')}`);
-  console.log(`🔌 API endpoint: POST /api/capture`);
+  console.log(`🔌 API endpoints:`);
+  console.log(`   POST /api/capture - Capture page with Playwright`);
+  console.log(`   POST /api/detect-wordpress - Detect WordPress`);
+  console.log(`   POST /api/get-style - Get computed style`);
+  console.log(`   POST /api/is-visible - Check element visibility`);
   console.log(`💚 Health check: GET /health`);
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   console.log('');

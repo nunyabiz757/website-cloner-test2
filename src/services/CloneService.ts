@@ -13,6 +13,7 @@ import { securityLogger } from './SecurityLogger';
 import { ComponentDetector } from './detection/ComponentDetector';
 import { BrowserService } from './BrowserService';
 import { wordPressAPIService } from './wordpress/WordPressAPIService';
+import { smartCloneService } from './SmartCloneService';
 
 export class CloneService {
   private projects: Map<string, CloneProject> = new Map();
@@ -1470,6 +1471,46 @@ export class CloneService {
       securityScan: metadata.securityScan || row.security_scan || null,
       technologyStack: metadata.technologyStack || row.technology_stack || null,
     };
+  }
+
+  /**
+   * Health check for Railway backend Playwright service
+   */
+  async healthCheck(): Promise<boolean> {
+    try {
+      return await smartCloneService.healthCheck();
+    } catch (error) {
+      console.error('Health check failed:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Smart clone using SmartCloneService (intelligently chooses between WordPress REST API and Playwright)
+   */
+  async smartClone(url: string, options: { preferREST?: boolean; forcePlaywright?: boolean } = {}) {
+    return await smartCloneService.clone(url, options);
+  }
+
+  /**
+   * Get rendered HTML via Playwright
+   */
+  async getRenderedHTML(url: string): Promise<string> {
+    return await smartCloneService.getRenderedHTML(url);
+  }
+
+  /**
+   * Take screenshot via Playwright
+   */
+  async takeScreenshot(url: string, fullPage: boolean = false): Promise<string> {
+    return await smartCloneService.takeScreenshot(url, fullPage);
+  }
+
+  /**
+   * Extract elements with computed styles via Playwright
+   */
+  async extractElementsWithStyles(url: string): Promise<any[]> {
+    return await smartCloneService.extractElements(url);
   }
 }
 
