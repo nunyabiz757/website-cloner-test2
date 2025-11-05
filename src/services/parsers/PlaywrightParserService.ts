@@ -86,19 +86,29 @@ export class PlaywrightParserService {
     fullPage?: boolean;
   } = {}): Promise<PageData> {
     console.log(`📄 Loading page: ${url}`);
+    console.log(`   Railway endpoint: ${this.railwayEndpoint}/api/capture`);
 
     try {
+      console.log('   Sending request to Railway backend...');
+      const startTime = Date.now();
+
       const response = await axios.post(`${this.railwayEndpoint}/api/capture`, {
         url,
         extractStyles: options.extractStyles !== false,
         takeScreenshot: options.takeScreenshot || false,
         fullPage: options.fullPage || false,
       }, {
-        timeout: 120000, // 2 minutes
+        timeout: 60000, // Reduced to 1 minute to fail faster
         headers: {
           'Content-Type': 'application/json',
         },
+        onDownloadProgress: (progressEvent) => {
+          console.log(`   Receiving data... ${progressEvent.loaded} bytes`);
+        },
       });
+
+      const elapsed = Date.now() - startTime;
+      console.log(`   Request completed in ${elapsed}ms`);
 
       const data = response.data;
 
@@ -123,10 +133,31 @@ export class PlaywrightParserService {
     } catch (error) {
       if (axios.isAxiosError(error)) {
         console.error('❌ Railway API error:', error.message);
+
+        if (error.code === 'ECONNABORTED') {
+          console.error('   Request timeout - Railway backend took too long to respond');
+          console.error('   This may indicate:');
+          console.error('   - Railway backend is not deployed or offline');
+          console.error('   - The target website is too complex/slow to process');
+          console.error('   - Network connectivity issues');
+          throw new Error(`Railway API timeout after 60s - backend may be offline or target site too slow`);
+        }
+
+        if (error.code === 'ENOTFOUND' || error.code === 'ECONNREFUSED') {
+          console.error('   Cannot connect to Railway backend');
+          console.error('   Railway endpoint:', this.railwayEndpoint);
+          console.error('   Please verify:');
+          console.error('   - Railway backend is deployed and running');
+          console.error('   - VITE_RAILWAY_API_URL environment variable is correct');
+          throw new Error(`Cannot reach Railway backend at ${this.railwayEndpoint}`);
+        }
+
         if (error.response) {
           console.error('   Status:', error.response.status);
           console.error('   Data:', error.response.data);
+          throw new Error(`Railway API failed (${error.response.status}): ${JSON.stringify(error.response.data)}`);
         }
+
         throw new Error(`Railway API failed: ${error.message}`);
       }
       throw error;
