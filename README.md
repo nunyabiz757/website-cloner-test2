@@ -1,6 +1,6 @@
 # Website Cloner Pro
 
-A professional web application that clones websites, optimizes their performance, and exports them to 11 different WordPress page builders.
+A professional web application that clones websites, optimizes their performance, and exports them to 11 different WordPress page builders with unified architecture.
 
 ![Build Status](https://img.shields.io/badge/build-passing-brightgreen)
 ![Version](https://img.shields.io/badge/version-1.0.0-blue)
