@@ -77,8 +77,8 @@ export function Clone() {
     console.log = (...args) => {
       originalConsoleLog(...args);
       const message = args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : String(arg)).join(' ');
-      if (message.includes('startAnalysis') || message.includes('CloneService') || message.includes('fetchHtml')) {
-        addLog(`[Service] ${message}`);
+      if (message.includes('startAnalysis') || message.includes('CloneService') || message.includes('fetchHtml') || message.includes('[WordPress]')) {
+        addLog(message.includes('[Service]') ? message : message);
       }
     };
 
