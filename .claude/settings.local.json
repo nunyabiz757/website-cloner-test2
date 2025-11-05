@@ -42,7 +42,8 @@
       "Bash(npm run:*)",
       "Bash(railway status:*)",
       "Bash(cat:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(curl:*)"
     ],
     "deny": [],
     "ask": []

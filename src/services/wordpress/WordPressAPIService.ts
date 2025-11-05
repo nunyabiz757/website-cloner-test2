@@ -103,9 +103,9 @@ export class WordPressAPIService {
       let confidence = 0;
       const indicators: string[] = [];
 
-      // Check for WordPress meta generator tag
+      // Check for WordPress meta generator tag (can be spoofed, so lower weight)
       if (html.includes('generator" content="WordPress')) {
-        confidence += 40;
+        confidence += 30;
         indicators.push('meta generator tag');
 
         // Extract version
@@ -115,28 +115,49 @@ export class WordPressAPIService {
         }
       }
 
-      // Check for wp-content path
+      // Check for wp-content path (hardest to hide, higher weight)
       if (html.includes('/wp-content/') || html.includes('wp-content')) {
-        confidence += 20;
+        confidence += 25;
         indicators.push('wp-content directory');
       }
 
-      // Check for wp-includes path
+      // Check for wp-includes path (hardest to hide, higher weight)
       if (html.includes('/wp-includes/') || html.includes('wp-includes')) {
-        confidence += 15;
+        confidence += 25;
         indicators.push('wp-includes directory');
       }
 
-      // Check for WordPress classes
-      if (html.includes('class="wp-') || html.includes('wp-block-')) {
+      // Check for WordPress classes (common in themes)
+      if (html.includes('class="wp-') || html.includes('wp-block-') || html.includes('id="wp-')) {
         confidence += 15;
-        indicators.push('WordPress CSS classes');
+        indicators.push('WordPress CSS classes/IDs');
+      }
+
+      // Check for WordPress JavaScript variables
+      if (html.includes('var wp_') || html.includes('window.wp') || html.includes('wpApiSettings')) {
+        confidence += 15;
+        indicators.push('WordPress JavaScript');
+      }
+
+      // Check for WordPress body classes (very common, hard to hide)
+      if (html.includes('class="home') || html.includes('class="page') || html.includes('class="post-type-')) {
+        // These are common WordPress body class patterns
+        if (html.includes('wp-') || html.includes('wordpress')) {
+          confidence += 10;
+          indicators.push('WordPress body classes');
+        }
       }
 
       // Check for common WordPress patterns
-      if (html.includes('wp-json') || html.includes('wp_') || html.includes('wordpress')) {
+      if (html.includes('wp-json') || html.includes('wp_') || html.includes('/xmlrpc.php')) {
         confidence += 10;
         indicators.push('WordPress identifiers');
+      }
+
+      // Check for WordPress emoji script (common in default WP)
+      if (html.includes('wp-emoji') || html.includes('wpemoji')) {
+        confidence += 10;
+        indicators.push('WordPress emoji script');
       }
 
       // Log what we found
