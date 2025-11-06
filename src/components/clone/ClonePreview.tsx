@@ -29,7 +29,7 @@ export function ClonePreview({
   const [showLogs, setShowLogs] = useState(false);
   const [iframeError, setIframeError] = useState(false);
   const [iframeLoading, setIframeLoading] = useState(true);
-  const [iframeScale, setIframeScale] = useState(0.5); // Default 50% scale
+  const [iframeScale, setIframeScale] = useState(0.8); // Default 80% scale for better readability
 
   const formatSize = (bytes: number): string => {
     if (bytes < 1024) return `${bytes} B`;
@@ -268,7 +268,7 @@ export function ClonePreview({
               +
             </button>
             <button
-              onClick={() => setIframeScale(0.5)}
+              onClick={() => setIframeScale(0.8)}
               className="px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm"
               title="Reset Zoom"
             >
@@ -296,26 +296,18 @@ export function ClonePreview({
                 <div className="bg-blue-600 px-4 py-2 text-white text-sm font-medium">
                   Cloned
                 </div>
-                <div className="h-[600px] overflow-auto bg-gray-100">
-                  <div style={{
-                    width: `${1920 * iframeScale}px`,
-                    height: `${1080 * iframeScale}px`,
-                    margin: '0 auto'
-                  }}>
-                    <iframe
-                      srcDoc={clonedHtml}
-                      className="border-0 bg-white"
-                      title="Cloned Website"
-                      sandbox="allow-same-origin allow-scripts"
-                      style={{
-                        width: '1920px',
-                        height: '1080px',
-                        transform: `scale(${iframeScale})`,
-                        transformOrigin: 'top left',
-                        border: 'none'
-                      }}
-                    />
-                  </div>
+                <div className="h-[600px] overflow-auto bg-gray-100 p-4">
+                  <iframe
+                    srcDoc={clonedHtml}
+                    className="border-0 bg-white shadow-lg mx-auto block"
+                    title="Cloned Website"
+                    sandbox="allow-same-origin allow-scripts"
+                    style={{
+                      width: `${1920 * iframeScale}px`,
+                      height: `${1080 * iframeScale}px`,
+                      border: 'none'
+                    }}
+                  />
                 </div>
               </div>
             </div>
@@ -333,26 +325,18 @@ export function ClonePreview({
               <div className="bg-blue-600 px-4 py-2 text-white text-sm font-medium">
                 Cloned Website
               </div>
-              <div className="h-[600px] overflow-auto bg-gray-100">
-                <div style={{
-                  width: `${1920 * iframeScale}px`,
-                  height: `${1080 * iframeScale}px`,
-                  margin: '0 auto'
-                }}>
-                  <iframe
-                    srcDoc={clonedHtml}
-                    className="border-0 bg-white"
-                    title="Cloned Website"
-                    sandbox="allow-same-origin allow-scripts"
-                    style={{
-                      width: '1920px',
-                      height: '1080px',
-                      transform: `scale(${iframeScale})`,
-                      transformOrigin: 'top left',
-                      border: 'none'
-                    }}
-                  />
-                </div>
+              <div className="h-[600px] overflow-auto bg-gray-100 p-4">
+                <iframe
+                  srcDoc={clonedHtml}
+                  className="border-0 bg-white shadow-lg mx-auto block"
+                  title="Cloned Website"
+                  sandbox="allow-same-origin allow-scripts"
+                  style={{
+                    width: `${1920 * iframeScale}px`,
+                    height: `${1080 * iframeScale}px`,
+                    border: 'none'
+                  }}
+                />
               </div>
             </div>
           )}
