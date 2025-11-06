@@ -20,7 +20,7 @@ export class CloneService {
   private userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36';
 
   async cloneWebsite(options: CloneOptions): Promise<CloneProject> {
-    console.log('🚀🚀🚀 CLONESERVICE VERSION: 2025-01-06-v6-FORCE-REBUILD 🚀🚀🚀');
+    console.log('🚀🚀🚀 CLONESERVICE VERSION: 2025-01-06-v7-SVG-FIX 🚀🚀🚀');
     console.log('CloneService.cloneWebsite called with options:', options);
 
     // Validate URL
@@ -1447,6 +1447,51 @@ export class CloneService {
       });
 
       console.log(`embedAssetsInHtml: Applied dimensions to ${stylesApplied} images`);
+
+      // Also handle SVG elements (logos are often SVGs, not images)
+      const svgRegex = /<svg([^>]*)>/gi;
+      rewrittenHtml = rewrittenHtml.replace(svgRegex, (match, attributes) => {
+        // Try to find corresponding SVG element with computed styles
+        // SVG elements often have class attributes we can match on
+        const classMatch = attributes.match(/class=["']([^"']+)["']/i);
+
+        if (classMatch) {
+          const classes = classMatch[1];
+
+          // Find element with matching classes
+          const element = elementsWithStyles.find((el: any) => {
+            if (el.tag?.toUpperCase() !== 'SVG') return false;
+            const elClasses = el.attributes?.class || '';
+            // Match if any class overlaps
+            return classes.split(' ').some(cls => elClasses.includes(cls));
+          });
+
+          if (element && element.position) {
+            const { width, height } = element.position;
+
+            // Only apply if dimensions are reasonable
+            if (width > 0 && width < 5000 && height > 0 && height < 5000) {
+              const styleMatch = attributes.match(/style=["']([^"']*)["']/i);
+              let newAttributes = attributes;
+
+              if (styleMatch) {
+                const existingStyle = styleMatch[1];
+                const newStyle = `${existingStyle}; width: ${Math.round(width)}px; height: ${Math.round(height)}px;`;
+                newAttributes = attributes.replace(/style=["'][^"']*["']/i, `style="${newStyle}"`);
+              } else {
+                newAttributes = attributes + ` style="width: ${Math.round(width)}px; height: ${Math.round(height)}px;"`;
+              }
+
+              stylesApplied++;
+              return `<svg${newAttributes}>`;
+            }
+          }
+        }
+
+        return match;
+      });
+
+      console.log(`embedAssetsInHtml: Applied dimensions to ${stylesApplied} total elements (images + SVGs)`);
     }
 
     // SECOND: Now embed images and fonts as data URIs
