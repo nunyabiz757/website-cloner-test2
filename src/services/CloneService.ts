@@ -572,14 +572,28 @@ export class CloneService {
         score: metrics.score,
       });
     } catch (error) {
-      console.error('startAnalysis: Error occurred:', error);
+      // Enhanced error logging with full details
+      console.error('startAnalysis: Error occurred:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        name: error instanceof Error ? error.name : undefined,
+        fullError: error,
+      });
+
       project.status = 'error';
       project.currentStep = `Error: ${error instanceof Error ? error.message : 'Unknown error'}`;
-      await this.saveProject(project).catch(() => {});
+      await this.saveProject(project).catch((saveError) => {
+        console.error('Failed to save error state:', {
+          message: saveError instanceof Error ? saveError.message : 'Unknown save error',
+          stack: saveError instanceof Error ? saveError.stack : undefined,
+        });
+      });
 
       loggingService.error('clone', 'Analysis process error', {
         projectId,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : String(error),
+        errorName: error instanceof Error ? error.name : undefined,
+        errorStack: error instanceof Error ? error.stack : undefined,
       });
       throw error;
     } finally {
@@ -996,15 +1010,34 @@ export class CloneService {
   }
 
   private async extractAndDownloadCSS(parsed: ParsedHTML, baseUrl: string): Promise<ClonedAsset[]> {
+    console.log(`[CSS] Starting parallel download of ${parsed.stylesheets.length} external stylesheets...`);
+    const startTime = Date.now();
     const assets: ClonedAsset[] = [];
 
-    for (const stylesheet of parsed.stylesheets.slice(0, 10)) {
-      if (stylesheet.href) {
-        const asset = await this.downloadTextAsset(stylesheet.href, 'css');
-        if (asset) assets.push(asset);
-      }
-    }
+    // Download external stylesheets in parallel (limit to 10)
+    const stylesheetUrls = parsed.stylesheets.slice(0, 10).filter(s => s.href);
+    const downloadPromises = stylesheetUrls.map(stylesheet =>
+      this.downloadTextAsset(stylesheet.href, 'css')
+    );
 
+    const results = await Promise.allSettled(downloadPromises);
+
+    let successCount = 0;
+    let failCount = 0;
+    results.forEach((result, index) => {
+      if (result.status === 'fulfilled' && result.value) {
+        assets.push(result.value);
+        successCount++;
+      } else {
+        failCount++;
+        console.log(`[CSS] Failed to download: ${stylesheetUrls[index].href}`,
+          result.status === 'rejected' ? result.reason : 'returned null');
+      }
+    });
+
+    console.log(`[CSS] Downloaded ${successCount}/${stylesheetUrls.length} stylesheets in ${Date.now() - startTime}ms (${failCount} failed)`);
+
+    // Add inline styles (no download needed)
     for (let i = 0; i < parsed.inlineStyles.length; i++) {
       const style = parsed.inlineStyles[i];
       if (style.content) {
@@ -1019,6 +1052,7 @@ export class CloneService {
       }
     }
 
+    console.log(`[CSS] Total CSS assets: ${assets.length} (${successCount} external + ${parsed.inlineStyles.length} inline)`);
     return assets;
   }
 
@@ -1050,57 +1084,101 @@ export class CloneService {
   }
 
   private async extractAndDownloadImages(parsed: ParsedHTML, baseUrl: string): Promise<ClonedAsset[]> {
+    console.log(`[IMAGES] Starting parallel download of ${parsed.images.length} images and ${parsed.backgroundImages.length} background images...`);
+    const startTime = Date.now();
     const assets: ClonedAsset[] = [];
 
-    for (const img of parsed.images.slice(0, 30)) {
-      if (img.src && !img.src.startsWith('data:')) {
-        const asset = await this.downloadBinaryAsset(img.src, 'image');
-        if (asset) {
-          if (img.width && img.height) {
-            asset.dimensions = { width: img.width, height: img.height };
-          }
-          assets.push(asset);
-        }
-      }
-    }
+    // Prepare all image downloads (regular + background, limit to 30 total)
+    const imagesToDownload = [
+      ...parsed.images.slice(0, 30).filter(img => img.src && !img.src.startsWith('data:')),
+      ...parsed.backgroundImages.slice(0, 10).filter(bgImg => bgImg.src && !bgImg.src.startsWith('data:'))
+    ];
 
-    for (const bgImg of parsed.backgroundImages.slice(0, 10)) {
-      if (bgImg.src && !bgImg.src.startsWith('data:')) {
-        const asset = await this.downloadBinaryAsset(bgImg.src, 'image');
-        if (asset) assets.push(asset);
+    // Download all images in parallel
+    const downloadPromises = imagesToDownload.map(async (img) => {
+      const asset = await this.downloadBinaryAsset(img.src, 'image');
+      if (asset && 'width' in img && 'height' in img && img.width && img.height) {
+        asset.dimensions = { width: img.width, height: img.height };
       }
-    }
+      return asset;
+    });
 
+    const results = await Promise.allSettled(downloadPromises);
+
+    let successCount = 0;
+    let failCount = 0;
+    results.forEach((result, index) => {
+      if (result.status === 'fulfilled' && result.value) {
+        assets.push(result.value);
+        successCount++;
+      } else {
+        failCount++;
+        console.log(`[IMAGES] Failed to download: ${imagesToDownload[index].src.substring(0, 100)}`,
+          result.status === 'rejected' ? result.reason : 'returned null');
+      }
+    });
+
+    console.log(`[IMAGES] Downloaded ${successCount}/${imagesToDownload.length} images in ${Date.now() - startTime}ms (${failCount} failed)`);
     return assets;
   }
 
   private async extractAndDownloadFonts(parsed: ParsedHTML, baseUrl: string): Promise<ClonedAsset[]> {
+    console.log(`[FONTS] Starting parallel download of ${parsed.fonts.length} fonts...`);
+    const startTime = Date.now();
     const assets: ClonedAsset[] = [];
 
-    for (const font of parsed.fonts.slice(0, 10)) {
-      if (font.href) {
-        const asset = await this.downloadBinaryAsset(font.href, 'font');
-        if (asset) assets.push(asset);
-      }
-    }
+    // Download fonts in parallel (limit to 10)
+    const fontsToDownload = parsed.fonts.slice(0, 10).filter(f => f.href);
+    const downloadPromises = fontsToDownload.map(font =>
+      this.downloadBinaryAsset(font.href, 'font')
+    );
 
+    const results = await Promise.allSettled(downloadPromises);
+
+    let successCount = 0;
+    let failCount = 0;
+    results.forEach((result, index) => {
+      if (result.status === 'fulfilled' && result.value) {
+        assets.push(result.value);
+        successCount++;
+      } else {
+        failCount++;
+        console.log(`[FONTS] Failed to download: ${fontsToDownload[index].href}`,
+          result.status === 'rejected' ? result.reason : 'returned null');
+      }
+    });
+
+    console.log(`[FONTS] Downloaded ${successCount}/${fontsToDownload.length} fonts in ${Date.now() - startTime}ms (${failCount} failed)`);
     return assets;
   }
 
   private async downloadTextAsset(url: string, type: 'css' | 'js'): Promise<ClonedAsset | null> {
+    const startTime = Date.now();
     try {
+      // Use CORS proxy to download from source URL
       const corsProxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+
+      // 10 second timeout for text assets
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => {
+        controller.abort();
+        console.log(`[${type.toUpperCase()}] Timeout (10s) downloading: ${url.substring(0, 100)}`);
+      }, 10000);
+
       const response = await fetch(corsProxyUrl, {
-        signal: AbortSignal.timeout(10000)
+        signal: controller.signal
       });
 
+      clearTimeout(timeoutId);
+
       if (!response.ok) {
-        loggingService.debug('clone', `Failed to download ${type}: ${url} (${response.status})`);
+        console.log(`[${type.toUpperCase()}] HTTP ${response.status} for: ${url.substring(0, 100)}`);
         return null;
       }
 
       const content = await response.text();
       const size = new Blob([content]).size;
+      const duration = Date.now() - startTime;
 
       const asset: ClonedAsset = {
         type,
@@ -1111,32 +1189,44 @@ export class CloneService {
         format: type,
       };
 
-      loggingService.debug('clone', `Downloaded ${type}: ${url} (${size} bytes)`);
+      console.log(`[${type.toUpperCase()}] ✓ Downloaded ${url.substring(0, 80)} (${(size / 1024).toFixed(1)}KB in ${duration}ms)`);
       return asset;
     } catch (error) {
-      loggingService.debug('clone', `Error downloading ${type}: ${url}`, {
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      const duration = Date.now() - startTime;
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      console.log(`[${type.toUpperCase()}] ✗ Failed after ${duration}ms: ${url.substring(0, 80)} - ${errorMsg}`);
       return null;
     }
   }
 
   private async downloadBinaryAsset(url: string, type: 'image' | 'font'): Promise<ClonedAsset | null> {
+    const startTime = Date.now();
     try {
+      // Use CORS proxy to download from source URL
       const corsProxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+
+      // 15 second timeout for binary assets (images/fonts can be larger)
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => {
+        controller.abort();
+        console.log(`[${type.toUpperCase()}] Timeout (15s) downloading: ${url.substring(0, 100)}`);
+      }, 15000);
+
       const response = await fetch(corsProxyUrl, {
-        signal: AbortSignal.timeout(15000)
+        signal: controller.signal
       });
 
+      clearTimeout(timeoutId);
+
       if (!response.ok) {
-        loggingService.debug('clone', `Failed to download ${type}: ${url} (${response.status})`);
+        console.log(`[${type.toUpperCase()}] HTTP ${response.status} for: ${url.substring(0, 100)}`);
         return null;
       }
 
       const blob = await response.blob();
       const size = blob.size;
-
       const base64Content = await this.blobToBase64(blob);
+      const duration = Date.now() - startTime;
 
       const asset: ClonedAsset = {
         type,
@@ -1147,12 +1237,12 @@ export class CloneService {
         format: this.getFileExtension(url),
       };
 
-      loggingService.debug('clone', `Downloaded ${type}: ${url} (${size} bytes)`);
+      console.log(`[${type.toUpperCase()}] ✓ Downloaded ${url.substring(0, 80)} (${(size / 1024).toFixed(1)}KB in ${duration}ms)`);
       return asset;
     } catch (error) {
-      loggingService.debug('clone', `Error downloading ${type}: ${url}`, {
-        error: error instanceof Error ? error.message : 'Unknown error',
-      });
+      const duration = Date.now() - startTime;
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      console.log(`[${type.toUpperCase()}] ✗ Failed after ${duration}ms: ${url.substring(0, 80)} - ${errorMsg}`);
       return null;
     }
   }
