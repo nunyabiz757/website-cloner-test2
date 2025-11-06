@@ -62,9 +62,9 @@ ENV VITE_SUPABASE_URL=$VITE_SUPABASE_URL
 ENV VITE_SUPABASE_ANON_KEY=$VITE_SUPABASE_ANON_KEY
 
 # Build the application (Vite will use the ENV variables)
-# Cache bust: 2025-01-06-v5-WITH-DOCKERIGNORE
-# Note: .dockerignore now prevents copying dist and build artifacts
-RUN npm run build
+# FORCE REBUILD: 2025-01-06-17:42:00-v6-ABSOLUTE-FRESH-BUILD
+# Note: .dockerignore prevents copying dist, changed CloneService version marker
+RUN echo "Build timestamp: $(date)" && npm run build
 
 # Install Playwright browsers AFTER build
 RUN npx playwright install chromium --with-deps
