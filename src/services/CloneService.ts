@@ -1379,23 +1379,8 @@ export class CloneService {
     // Get elements with computed styles from metadata
     const elementsWithStyles = (metadata as any)?.elementsWithStyles || [];
 
-    // First, embed images and fonts as data URIs
-    for (const asset of assets) {
-      if (asset.originalUrl.startsWith('inline-')) continue;
-
-      const escapedUrl = asset.originalUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const regex = new RegExp(escapedUrl, 'g');
-
-      if (asset.type === 'image' && asset.content?.startsWith('data:')) {
-        rewrittenHtml = rewrittenHtml.replace(regex, asset.content);
-        imagesEmbedded++;
-      } else if (asset.type === 'font' && asset.content?.startsWith('data:')) {
-        rewrittenHtml = rewrittenHtml.replace(regex, asset.content);
-        fontsEmbedded++;
-      }
-    }
-
-    // Apply computed styles to images to preserve their rendered dimensions
+    // FIRST: Apply computed styles to images to preserve their rendered dimensions
+    // This must happen BEFORE we replace URLs with data URIs
     if (elementsWithStyles.length > 0) {
       console.log(`embedAssetsInHtml: Applying computed styles to images from ${elementsWithStyles.length} elements`);
 
@@ -1441,6 +1426,22 @@ export class CloneService {
       });
 
       console.log(`embedAssetsInHtml: Applied dimensions to ${stylesApplied} images`);
+    }
+
+    // SECOND: Now embed images and fonts as data URIs
+    for (const asset of assets) {
+      if (asset.originalUrl.startsWith('inline-')) continue;
+
+      const escapedUrl = asset.originalUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(escapedUrl, 'g');
+
+      if (asset.type === 'image' && asset.content?.startsWith('data:')) {
+        rewrittenHtml = rewrittenHtml.replace(regex, asset.content);
+        imagesEmbedded++;
+      } else if (asset.type === 'font' && asset.content?.startsWith('data:')) {
+        rewrittenHtml = rewrittenHtml.replace(regex, asset.content);
+        fontsEmbedded++;
+      }
     }
 
     // Now inline CSS stylesheets
