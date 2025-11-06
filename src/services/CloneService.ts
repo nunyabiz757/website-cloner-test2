@@ -262,6 +262,16 @@ export class CloneService {
           const captureResult = await browserService.capturePage(options.source, true);
           html = captureResult.html;
 
+          // Store elements with computed styles for later use
+          if (captureResult.elements) {
+            console.log(`startAnalysis: Captured ${captureResult.elements.length} elements with computed styles`);
+            // Store in project metadata for use during asset embedding
+            if (!project.metadata) {
+              project.metadata = {} as WebsiteMetadata;
+            }
+            (project.metadata as any).elementsWithStyles = captureResult.elements;
+          }
+
           // Extract screenshot from capture result if available
           if ((captureResult as any).screenshot) {
             if (!project.metadata) {
@@ -496,7 +506,7 @@ export class CloneService {
         project.progress = 70;
         project.currentStep = 'Embedding assets in HTML';
 
-        const rewrittenHtml = this.embedAssetsInHtml(html, allAssets);
+        const rewrittenHtml = this.embedAssetsInHtml(html, allAssets, project.metadata);
         project.originalHtml = rewrittenHtml;
         console.log('startAnalysis: HTML rewritten, new size:', new Blob([rewrittenHtml]).size, 'bytes');
 
@@ -1352,11 +1362,15 @@ export class CloneService {
     }
   }
 
-  private embedAssetsInHtml(html: string, assets: ClonedAsset[]): string {
+  private embedAssetsInHtml(html: string, assets: ClonedAsset[], metadata?: WebsiteMetadata): string {
     let rewrittenHtml = html;
     let imagesEmbedded = 0;
     let cssInlined = 0;
     let fontsEmbedded = 0;
+    let stylesApplied = 0;
+
+    // Get elements with computed styles from metadata
+    const elementsWithStyles = (metadata as any)?.elementsWithStyles || [];
 
     // First, embed images and fonts as data URIs
     for (const asset of assets) {
@@ -1372,6 +1386,54 @@ export class CloneService {
         rewrittenHtml = rewrittenHtml.replace(regex, asset.content);
         fontsEmbedded++;
       }
+    }
+
+    // Apply computed styles to images to preserve their rendered dimensions
+    if (elementsWithStyles.length > 0) {
+      console.log(`embedAssetsInHtml: Applying computed styles to images from ${elementsWithStyles.length} elements`);
+
+      // Find all img elements in the HTML
+      const imgRegex = /<img([^>]*)>/gi;
+      rewrittenHtml = rewrittenHtml.replace(imgRegex, (match, attributes) => {
+        // Extract src attribute to match with elements
+        const srcMatch = attributes.match(/src=["']([^"']+)["']/i);
+        if (!srcMatch) return match;
+
+        const src = srcMatch[1];
+
+        // Find corresponding element with computed styles
+        const element = elementsWithStyles.find((el: any) =>
+          el.tagName === 'IMG' && el.attributes?.src === src
+        );
+
+        if (element && element.rect) {
+          const { width, height } = element.rect;
+
+          // Only apply if dimensions are reasonable (not 0 or extremely large)
+          if (width > 0 && width < 5000 && height > 0 && height < 5000) {
+            // Check if style attribute already exists
+            const styleMatch = attributes.match(/style=["']([^"']*)["']/i);
+            let newAttributes = attributes;
+
+            if (styleMatch) {
+              // Append to existing style
+              const existingStyle = styleMatch[1];
+              const newStyle = `${existingStyle}; width: ${Math.round(width)}px; height: ${Math.round(height)}px;`;
+              newAttributes = attributes.replace(/style=["'][^"']*["']/i, `style="${newStyle}"`);
+            } else {
+              // Add new style attribute
+              newAttributes = attributes + ` style="width: ${Math.round(width)}px; height: ${Math.round(height)}px;"`;
+            }
+
+            stylesApplied++;
+            return `<img${newAttributes}>`;
+          }
+        }
+
+        return match;
+      });
+
+      console.log(`embedAssetsInHtml: Applied dimensions to ${stylesApplied} images`);
     }
 
     // Now inline CSS stylesheets
@@ -1390,8 +1452,8 @@ export class CloneService {
       cssInlined++;
     }
 
-    console.log(`embedAssetsInHtml: Embedded ${imagesEmbedded} images, ${fontsEmbedded} fonts as data URIs, inlined ${cssInlined} CSS files`);
-    loggingService.debug('clone', `Embedded ${imagesEmbedded + fontsEmbedded + cssInlined} assets in HTML`);
+    console.log(`embedAssetsInHtml: Embedded ${imagesEmbedded} images, ${fontsEmbedded} fonts as data URIs, inlined ${cssInlined} CSS files, applied ${stylesApplied} image dimensions`);
+    loggingService.debug('clone', `Embedded ${imagesEmbedded + fontsEmbedded + cssInlined} assets in HTML, applied ${stylesApplied} styles`);
     return rewrittenHtml;
   }
 

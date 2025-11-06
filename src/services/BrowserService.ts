@@ -35,6 +35,19 @@ export interface MediaQuery {
   rules: string[];
 }
 
+export interface ElementWithStyles {
+  selector: string;
+  tagName: string;
+  attributes: Record<string, string>;
+  computedStyles: Record<string, string>;
+  rect: {
+    top: number;
+    left: number;
+    width: number;
+    height: number;
+  };
+}
+
 export interface CaptureResult {
   html: string;
   styles: string;
@@ -44,6 +57,7 @@ export interface CaptureResult {
     fonts: string[];
     stylesheets: string[];
   };
+  elements?: ElementWithStyles[]; // Elements with computed styles
 }
 
 export interface ResponsiveCaptureResult extends CaptureResult {
