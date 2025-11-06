@@ -262,14 +262,21 @@ export class CloneService {
           const captureResult = await browserService.capturePage(options.source, true);
           html = captureResult.html;
 
+          console.log('startAnalysis: Capture result keys:', Object.keys(captureResult));
+          console.log('startAnalysis: Elements in capture result:', captureResult.elements ? captureResult.elements.length : 'NONE');
+
           // Store elements with computed styles for later use
-          if (captureResult.elements) {
+          if (captureResult.elements && captureResult.elements.length > 0) {
             console.log(`startAnalysis: Captured ${captureResult.elements.length} elements with computed styles`);
+            console.log(`startAnalysis: Sample element:`, JSON.stringify(captureResult.elements[0], null, 2));
+
             // Store in project metadata for use during asset embedding
             if (!project.metadata) {
               project.metadata = {} as WebsiteMetadata;
             }
             (project.metadata as any).elementsWithStyles = captureResult.elements;
+          } else {
+            console.log('startAnalysis: WARNING - No elements with computed styles received from capture');
           }
 
           // Extract screenshot from capture result if available
