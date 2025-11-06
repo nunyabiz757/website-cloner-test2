@@ -1370,6 +1370,7 @@ export class CloneService {
   }
 
   private embedAssetsInHtml(html: string, assets: ClonedAsset[], metadata?: WebsiteMetadata): string {
+    console.log('🔧 ===== EMBED ASSETS IN HTML STARTING =====');
     let rewrittenHtml = html;
     let imagesEmbedded = 0;
     let cssInlined = 0;
@@ -1378,6 +1379,7 @@ export class CloneService {
 
     // Get elements with computed styles from metadata
     const elementsWithStyles = (metadata as any)?.elementsWithStyles || [];
+    console.log(`🔧 Elements with styles available: ${elementsWithStyles.length}`);
 
     // FIRST: Apply computed styles to images to preserve their rendered dimensions
     // This must happen BEFORE we replace URLs with data URIs
@@ -1387,12 +1389,17 @@ export class CloneService {
       // Debug: Show sample element structure
       const sampleElement = elementsWithStyles.find((el: any) => el.tag?.toUpperCase() === 'IMG');
       if (sampleElement) {
-        console.log('embedAssetsInHtml: Sample IMG element structure:', {
+        console.log('🔧 Sample IMG element found:', {
           tag: sampleElement.tag,
           hasPosition: !!sampleElement.position,
           position: sampleElement.position,
-          attributes: sampleElement.attributes
+          srcAttribute: sampleElement.attributes?.src
         });
+      } else {
+        console.log('🔧 ⚠️ NO IMG elements found in captured elements!');
+        // Show what tags we do have
+        const uniqueTags = [...new Set(elementsWithStyles.map((el: any) => el.tag))].slice(0, 10);
+        console.log('🔧 Available tags:', uniqueTags);
       }
 
       // Find all img elements in the HTML
@@ -1472,6 +1479,9 @@ export class CloneService {
       cssInlined++;
     }
 
+    console.log(`🔧 ===== EMBED ASSETS COMPLETE =====`);
+    console.log(`🔧 Images embedded: ${imagesEmbedded}, Fonts embedded: ${fontsEmbedded}, CSS inlined: ${cssInlined}`);
+    console.log(`🔧 ⭐ IMAGE DIMENSIONS APPLIED: ${stylesApplied} ⭐`);
     console.log(`embedAssetsInHtml: Embedded ${imagesEmbedded} images, ${fontsEmbedded} fonts as data URIs, inlined ${cssInlined} CSS files, applied ${stylesApplied} image dimensions`);
     loggingService.debug('clone', `Embedded ${imagesEmbedded + fontsEmbedded + cssInlined} assets in HTML, applied ${stylesApplied} styles`);
     return rewrittenHtml;
