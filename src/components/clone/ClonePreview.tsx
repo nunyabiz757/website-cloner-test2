@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { Button } from '../ui/Button';
+import { AlertCircle, ExternalLink } from 'lucide-react';
 
 export interface ClonePreviewProps {
   originalUrl: string;
   clonedHtml: string;
+  screenshot?: string; // Base64 screenshot for fallback
   onDownload: () => void;
   onExportToWordPress: () => void;
   stats: {
@@ -17,6 +19,7 @@ export interface ClonePreviewProps {
 export function ClonePreview({
   originalUrl,
   clonedHtml,
+  screenshot,
   onDownload,
   onExportToWordPress,
   stats,
@@ -24,11 +27,87 @@ export function ClonePreview({
 }: ClonePreviewProps) {
   const [viewMode, setViewMode] = useState<'split' | 'original' | 'cloned'>('split');
   const [showLogs, setShowLogs] = useState(false);
+  const [iframeError, setIframeError] = useState(false);
+  const [iframeLoading, setIframeLoading] = useState(true);
 
   const formatSize = (bytes: number): string => {
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(2)} KB`;
     return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+  };
+
+  const handleIframeLoad = () => {
+    setIframeLoading(false);
+    setIframeError(false);
+  };
+
+  const handleIframeError = () => {
+    setIframeLoading(false);
+    setIframeError(true);
+  };
+
+  const renderOriginalPreview = () => {
+    if (iframeError) {
+      // Fallback UI when iframe is blocked
+      return (
+        <div className="flex flex-col items-center justify-center h-full bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+          <AlertCircle className="text-yellow-500 mb-4" size={48} />
+          <h4 className="font-semibold text-gray-900 mb-2 text-center">
+            Cannot Display Original Site
+          </h4>
+          <p className="text-sm text-gray-600 mb-4 text-center max-w-md">
+            This website prevents embedding due to security policies (X-Frame-Options or CSP headers)
+          </p>
+
+          {screenshot && (
+            <div className="mb-4 border-2 border-gray-300 rounded-lg overflow-hidden shadow-lg max-w-lg">
+              <img
+                src={screenshot}
+                alt="Original website screenshot"
+                className="w-full h-auto"
+              />
+              <div className="bg-gray-800 px-3 py-2 text-xs text-gray-300 text-center">
+                Screenshot captured during clone
+              </div>
+            </div>
+          )}
+
+          <Button
+            onClick={() => window.open(originalUrl, '_blank')}
+            className="mt-2"
+          >
+            <ExternalLink className="w-4 h-4 mr-2" />
+            Open in New Tab
+          </Button>
+
+          <p className="text-xs text-gray-500 mt-4 text-center max-w-md">
+            Tip: Most modern websites block iframe embedding for security. Use the screenshot above or open in a new tab.
+          </p>
+        </div>
+      );
+    }
+
+    return (
+      <>
+        {iframeLoading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-gray-100 z-10">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-sm text-gray-600">Loading original website...</p>
+            </div>
+          </div>
+        )}
+        <iframe
+          src={originalUrl}
+          className="w-full h-full border-0 bg-white"
+          title="Original Website"
+          sandbox="allow-same-origin allow-scripts allow-popups"
+          onLoad={handleIframeLoad}
+          onError={handleIframeError}
+          style={{ display: iframeError ? 'none' : 'block' }}
+        />
+      </>
+    );
   };
 
   return (
@@ -177,13 +256,8 @@ export function ClonePreview({
                 <div className="bg-gray-800 px-4 py-2 text-white text-sm font-medium">
                   Original
                 </div>
-                <div className="h-[600px] overflow-hidden">
-                  <iframe
-                    src={originalUrl}
-                    className="w-full h-full border-0 bg-white"
-                    title="Original Website"
-                    sandbox="allow-same-origin allow-scripts"
-                  />
+                <div className="h-[600px] overflow-hidden relative">
+                  {renderOriginalPreview()}
                 </div>
               </div>
 
@@ -207,13 +281,8 @@ export function ClonePreview({
               <div className="bg-gray-800 px-4 py-2 text-white text-sm font-medium">
                 Original Website
               </div>
-              <div className="h-[600px] overflow-hidden">
-                <iframe
-                  src={originalUrl}
-                  className="w-full h-full border-0 bg-white"
-                  title="Original Website"
-                  sandbox="allow-same-origin allow-scripts"
-                />
+              <div className="h-[600px] overflow-hidden relative">
+                {renderOriginalPreview()}
               </div>
             </div>
           ) : (

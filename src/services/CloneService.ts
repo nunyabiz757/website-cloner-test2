@@ -217,6 +217,23 @@ export class CloneService {
           html = captureResult.html;
         }
         console.log('startAnalysis: Browser capture complete - HTML length:', html.length);
+
+        // Capture screenshot for preview (in case iframe is blocked)
+        console.log('startAnalysis: Capturing screenshot for preview...');
+        project.currentStep = 'Capturing screenshot';
+        options.onProgress?.(20, 'Capturing screenshot');
+
+        try {
+          const screenshot = await browserService.takeScreenshot(options.source, false);
+          if (!project.metadata) {
+            project.metadata = {} as WebsiteMetadata;
+          }
+          project.metadata.screenshot = screenshot;
+          console.log('startAnalysis: Screenshot captured successfully');
+        } catch (screenshotError) {
+          console.log('startAnalysis: Screenshot capture failed (non-critical):', screenshotError instanceof Error ? screenshotError.message : 'Unknown error');
+          // Don't fail the entire clone if screenshot fails
+        }
       } else {
         // Standard static HTML fetch (existing behavior)
         console.log('startAnalysis: Browser automation DISABLED - using standard fetch');

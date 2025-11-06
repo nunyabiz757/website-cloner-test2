@@ -113,6 +113,7 @@ export interface WebsiteMetadata {
     blocksCount?: number;
     posts?: any[];
   };
+  screenshot?: string; // Base64 screenshot for preview when iframe is blocked
 }
 
 export interface PerformanceMetrics {

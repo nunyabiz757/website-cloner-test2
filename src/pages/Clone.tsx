@@ -17,6 +17,7 @@ type Phase = 'form' | 'progress' | 'preview';
 interface CloneResult {
   originalUrl: string;
   clonedHtml: string;
+  screenshot?: string;
   metadata?: {
     title?: string;
     description?: string;
@@ -147,6 +148,7 @@ export function Clone() {
       setCloneResult({
         originalUrl: url,
         clonedHtml: result.originalHtml || '',
+        screenshot: result.metadata?.screenshot,
         metadata: result.metadata,
       });
 
@@ -419,6 +421,7 @@ export function Clone() {
             <ClonePreview
               originalUrl={cloneResult.originalUrl}
               clonedHtml={cloneResult.clonedHtml}
+              screenshot={cloneResult.screenshot}
               onDownload={handleDownload}
               onExportToWordPress={handleExportToWordPress}
               stats={calculateStats()}
