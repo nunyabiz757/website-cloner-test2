@@ -1384,6 +1384,17 @@ export class CloneService {
     if (elementsWithStyles.length > 0) {
       console.log(`embedAssetsInHtml: Applying computed styles to images from ${elementsWithStyles.length} elements`);
 
+      // Debug: Show sample element structure
+      const sampleElement = elementsWithStyles.find((el: any) => el.tag?.toUpperCase() === 'IMG');
+      if (sampleElement) {
+        console.log('embedAssetsInHtml: Sample IMG element structure:', {
+          tag: sampleElement.tag,
+          hasPosition: !!sampleElement.position,
+          position: sampleElement.position,
+          attributes: sampleElement.attributes
+        });
+      }
+
       // Find all img elements in the HTML
       const imgRegex = /<img([^>]*)>/gi;
       rewrittenHtml = rewrittenHtml.replace(imgRegex, (match, attributes) => {
@@ -1394,12 +1405,13 @@ export class CloneService {
         const src = srcMatch[1];
 
         // Find corresponding element with computed styles
+        // Railway API returns: { tag: 'img', position: { x, y, width, height }, ... }
         const element = elementsWithStyles.find((el: any) =>
-          el.tagName === 'IMG' && el.attributes?.src === src
+          el.tag?.toUpperCase() === 'IMG' && el.attributes?.src === src
         );
 
-        if (element && element.rect) {
-          const { width, height } = element.rect;
+        if (element && element.position) {
+          const { width, height } = element.position;
 
           // Only apply if dimensions are reasonable (not 0 or extremely large)
           if (width > 0 && width < 5000 && height > 0 && height < 5000) {
