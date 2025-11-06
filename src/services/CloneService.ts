@@ -569,7 +569,7 @@ export class CloneService {
 
       loggingService.success('clone', `Successfully analyzed ${options.source}`, {
         projectId,
-        score: metrics.score,
+        score: project.metrics?.score || project.originalScore || 0,
       });
     } catch (error) {
       // Enhanced error logging with full details
