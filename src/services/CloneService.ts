@@ -20,6 +20,7 @@ export class CloneService {
   private userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36';
 
   async cloneWebsite(options: CloneOptions): Promise<CloneProject> {
+    console.log('🚀🚀🚀 CLONESERVICE VERSION: 2025-01-06-v3-FINAL 🚀🚀🚀');
     console.log('CloneService.cloneWebsite called with options:', options);
 
     // Validate URL
