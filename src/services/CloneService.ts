@@ -20,7 +20,7 @@ export class CloneService {
   private userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36';
 
   async cloneWebsite(options: CloneOptions): Promise<CloneProject> {
-    console.log('🚀🚀🚀 CLONESERVICE VERSION: 2025-01-06-v7-SVG-FIX 🚀🚀🚀');
+    console.log('🚀🚀🚀 CLONESERVICE VERSION: 2025-01-06-v8-IMPORTANT-FIX 🚀🚀🚀');
     console.log('CloneService.cloneWebsite called with options:', options);
 
     // Validate URL
@@ -1424,18 +1424,20 @@ export class CloneService {
 
           // Only apply if dimensions are reasonable (not 0 or extremely large)
           if (width > 0 && width < 5000 && height > 0 && height < 5000) {
+            console.log(`🔧 Applying dimensions to IMG: ${src.substring(0, 80)}... => ${Math.round(width)}x${Math.round(height)}px`);
+
             // Check if style attribute already exists
             const styleMatch = attributes.match(/style=["']([^"']*)["']/i);
             let newAttributes = attributes;
 
             if (styleMatch) {
-              // Append to existing style
+              // Append to existing style with !important to override CSS classes
               const existingStyle = styleMatch[1];
-              const newStyle = `${existingStyle}; width: ${Math.round(width)}px; height: ${Math.round(height)}px;`;
+              const newStyle = `${existingStyle}; width: ${Math.round(width)}px !important; height: ${Math.round(height)}px !important;`;
               newAttributes = attributes.replace(/style=["'][^"']*["']/i, `style="${newStyle}"`);
             } else {
-              // Add new style attribute
-              newAttributes = attributes + ` style="width: ${Math.round(width)}px; height: ${Math.round(height)}px;"`;
+              // Add new style attribute with !important to override CSS classes
+              newAttributes = attributes + ` style="width: ${Math.round(width)}px !important; height: ${Math.round(height)}px !important;"`;
             }
 
             stylesApplied++;
@@ -1476,10 +1478,10 @@ export class CloneService {
 
               if (styleMatch) {
                 const existingStyle = styleMatch[1];
-                const newStyle = `${existingStyle}; width: ${Math.round(width)}px; height: ${Math.round(height)}px;`;
+                const newStyle = `${existingStyle}; width: ${Math.round(width)}px !important; height: ${Math.round(height)}px !important;`;
                 newAttributes = attributes.replace(/style=["'][^"']*["']/i, `style="${newStyle}"`);
               } else {
-                newAttributes = attributes + ` style="width: ${Math.round(width)}px; height: ${Math.round(height)}px;"`;
+                newAttributes = attributes + ` style="width: ${Math.round(width)}px !important; height: ${Math.round(height)}px !important;"`;
               }
 
               stylesApplied++;
