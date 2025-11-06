@@ -180,7 +180,7 @@ export class BrowserService {
   /**
    * Navigate to URL and capture full rendered content using Railway API
    */
-  async capturePage(url: string): Promise<CaptureResult> {
+  async capturePage(url: string, takeScreenshot: boolean = false): Promise<CaptureResult> {
     console.log(`🌐 Requesting browser capture for ${url}...`);
 
     try {
@@ -194,7 +194,7 @@ export class BrowserService {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ url }),
+        body: JSON.stringify({ url, takeScreenshot }),
       });
 
       if (!response.ok) {
@@ -208,6 +208,9 @@ export class BrowserService {
       console.log(`📄 HTML length: ${result.html.length} chars`);
       console.log(`🎨 CSS length: ${result.styles.length} chars`);
       console.log(`📦 Resources: ${result.resources.images.length} images, ${result.resources.fonts.length} fonts`);
+      if (takeScreenshot && (result as any).screenshot) {
+        console.log(`📸 Screenshot captured`);
+      }
 
       return result;
     } catch (error) {
@@ -224,7 +227,8 @@ export class BrowserService {
    */
   async captureResponsive(
     url: string,
-    breakpoints: Breakpoint[] = DEFAULT_BREAKPOINTS
+    breakpoints: Breakpoint[] = DEFAULT_BREAKPOINTS,
+    takeScreenshot: boolean = false
   ): Promise<ResponsiveCaptureResult> {
     console.log(`📱 Requesting responsive capture for ${url} via API...`);
 
@@ -240,7 +244,8 @@ export class BrowserService {
         body: JSON.stringify({
           url,
           responsive: true,
-          breakpoints
+          breakpoints,
+          takeScreenshot
         }),
       });
 
@@ -267,7 +272,7 @@ export class BrowserService {
   /**
    * Capture interactive states for all interactive elements (hover, focus, active)
    */
-  async captureInteractiveStates(url: string): Promise<InteractiveCaptureResult> {
+  async captureInteractiveStates(url: string, takeScreenshot: boolean = false): Promise<InteractiveCaptureResult> {
     console.log(`🎨 Requesting interactive state capture for ${url} via API...`);
 
     try {
@@ -281,6 +286,7 @@ export class BrowserService {
         body: JSON.stringify({
           url,
           interactive: true,
+          takeScreenshot
         }),
       });
 
@@ -307,7 +313,7 @@ export class BrowserService {
   /**
    * Capture page with animation detection (transitions, keyframes, transforms)
    */
-  async captureWithAnimations(url: string): Promise<AnimationCaptureResult> {
+  async captureWithAnimations(url: string, takeScreenshot: boolean = false): Promise<AnimationCaptureResult> {
     console.log(`🎬 Requesting animation detection for ${url} via API...`);
 
     try {
@@ -321,6 +327,7 @@ export class BrowserService {
         body: JSON.stringify({
           url,
           animations: true,
+          takeScreenshot
         }),
       });
 
@@ -347,7 +354,7 @@ export class BrowserService {
   /**
    * Capture page with advanced style analysis (colors, typography, visual effects)
    */
-  async captureWithStyleAnalysis(url: string): Promise<StyleAnalysisResult> {
+  async captureWithStyleAnalysis(url: string, takeScreenshot: boolean = false): Promise<StyleAnalysisResult> {
     console.log(`🎨 Requesting style analysis for ${url} via API...`);
 
     try {
@@ -361,6 +368,7 @@ export class BrowserService {
         body: JSON.stringify({
           url,
           styleAnalysis: true,
+          takeScreenshot
         }),
       });
 
@@ -388,7 +396,7 @@ export class BrowserService {
   /**
    * Capture page with navigation detection
    */
-  async captureWithNavigation(url: string): Promise<NavigationResult> {
+  async captureWithNavigation(url: string, takeScreenshot: boolean = false): Promise<NavigationResult> {
     console.log(`🧭 Requesting navigation detection for ${url} via API...`);
 
     try {
@@ -402,6 +410,7 @@ export class BrowserService {
         body: JSON.stringify({
           url,
           navigation: true,
+          takeScreenshot
         }),
       });
 

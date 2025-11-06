@@ -107,8 +107,17 @@ export class CloneService {
           project.currentStep = 'Capturing responsive breakpoints';
           options.onProgress?.(15, 'Capturing responsive breakpoints');
 
-          const responsiveCaptureResult = await browserService.captureResponsive(options.source);
+          const responsiveCaptureResult = await browserService.captureResponsive(options.source, undefined, true);
           html = responsiveCaptureResult.html;
+
+          // Extract screenshot from capture result if available
+          if ((responsiveCaptureResult as any).screenshot) {
+            if (!project.metadata) {
+              project.metadata = {} as WebsiteMetadata;
+            }
+            project.metadata.screenshot = `data:image/png;base64,${(responsiveCaptureResult as any).screenshot}`;
+            console.log('startAnalysis: Screenshot captured with responsive capture');
+          }
 
           // Store responsive data in project metadata
           if (project.metadata) {
@@ -126,8 +135,17 @@ export class CloneService {
           project.currentStep = 'Capturing interactive states';
           options.onProgress?.(15, 'Capturing interactive states');
 
-          const interactiveCaptureResult = await browserService.captureInteractiveStates(options.source);
+          const interactiveCaptureResult = await browserService.captureInteractiveStates(options.source, true);
           html = interactiveCaptureResult.html;
+
+          // Extract screenshot from capture result if available
+          if ((interactiveCaptureResult as any).screenshot) {
+            if (!project.metadata) {
+              project.metadata = {} as WebsiteMetadata;
+            }
+            project.metadata.screenshot = `data:image/png;base64,${(interactiveCaptureResult as any).screenshot}`;
+            console.log('startAnalysis: Screenshot captured with interactive capture');
+          }
 
           // Store interactive data in project metadata
           if (project.metadata) {
@@ -149,8 +167,17 @@ export class CloneService {
           project.currentStep = 'Detecting animations';
           options.onProgress?.(15, 'Detecting animations');
 
-          const animationCaptureResult = await browserService.captureWithAnimations(options.source);
+          const animationCaptureResult = await browserService.captureWithAnimations(options.source, true);
           html = animationCaptureResult.html;
+
+          // Extract screenshot from capture result if available
+          if ((animationCaptureResult as any).screenshot) {
+            if (!project.metadata) {
+              project.metadata = {} as WebsiteMetadata;
+            }
+            project.metadata.screenshot = `data:image/png;base64,${(animationCaptureResult as any).screenshot}`;
+            console.log('startAnalysis: Screenshot captured with animation capture');
+          }
 
           // Store animation data in project metadata
           if (project.metadata) {
@@ -170,8 +197,17 @@ export class CloneService {
           project.currentStep = 'Analyzing styles';
           options.onProgress?.(15, 'Analyzing styles');
 
-          const styleAnalysisResult = await browserService.captureWithStyleAnalysis(options.source);
+          const styleAnalysisResult = await browserService.captureWithStyleAnalysis(options.source, true);
           html = styleAnalysisResult.html;
+
+          // Extract screenshot from capture result if available
+          if ((styleAnalysisResult as any).screenshot) {
+            if (!project.metadata) {
+              project.metadata = {} as WebsiteMetadata;
+            }
+            project.metadata.screenshot = `data:image/png;base64,${(styleAnalysisResult as any).screenshot}`;
+            console.log('startAnalysis: Screenshot captured with style analysis');
+          }
 
           // Store style analysis data in project metadata
           if (project.metadata) {
@@ -192,8 +228,17 @@ export class CloneService {
           project.currentStep = 'Detecting navigation';
           options.onProgress?.(15, 'Detecting navigation');
 
-          const navigationResult = await browserService.captureWithNavigation(options.source);
+          const navigationResult = await browserService.captureWithNavigation(options.source, true);
           html = navigationResult.html;
+
+          // Extract screenshot from capture result if available
+          if ((navigationResult as any).screenshot) {
+            if (!project.metadata) {
+              project.metadata = {} as WebsiteMetadata;
+            }
+            project.metadata.screenshot = `data:image/png;base64,${(navigationResult as any).screenshot}`;
+            console.log('startAnalysis: Screenshot captured with navigation detection');
+          }
 
           // Store navigation data in project metadata
           if (project.metadata) {
@@ -213,27 +258,22 @@ export class CloneService {
 
           console.log(`Navigation detection complete: ${navigationResult.navigation.totalNavigations} navigations detected`);
         } else {
-          const captureResult = await browserService.capturePage(options.source);
+          // Standard capture with screenshot
+          const captureResult = await browserService.capturePage(options.source, true);
           html = captureResult.html;
+
+          // Extract screenshot from capture result if available
+          if ((captureResult as any).screenshot) {
+            if (!project.metadata) {
+              project.metadata = {} as WebsiteMetadata;
+            }
+            project.metadata.screenshot = `data:image/png;base64,${(captureResult as any).screenshot}`;
+            console.log('startAnalysis: Screenshot captured with page capture');
+          } else {
+            console.log('startAnalysis: No screenshot returned from capture');
+          }
         }
         console.log('startAnalysis: Browser capture complete - HTML length:', html.length);
-
-        // Capture screenshot for preview (in case iframe is blocked)
-        console.log('startAnalysis: Capturing screenshot for preview...');
-        project.currentStep = 'Capturing screenshot';
-        options.onProgress?.(20, 'Capturing screenshot');
-
-        try {
-          const screenshot = await browserService.takeScreenshot(options.source, false);
-          if (!project.metadata) {
-            project.metadata = {} as WebsiteMetadata;
-          }
-          project.metadata.screenshot = screenshot;
-          console.log('startAnalysis: Screenshot captured successfully');
-        } catch (screenshotError) {
-          console.log('startAnalysis: Screenshot capture failed (non-critical):', screenshotError instanceof Error ? screenshotError.message : 'Unknown error');
-          // Don't fail the entire clone if screenshot fails
-        }
       } else {
         // Standard static HTML fetch (existing behavior)
         console.log('startAnalysis: Browser automation DISABLED - using standard fetch');
