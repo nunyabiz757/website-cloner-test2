@@ -20,8 +20,11 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Inactivity timeout (30 minutes)
-const INACTIVITY_TIMEOUT = 30 * 60 * 1000;
+// Inactivity timeout (configurable via env, disabled by default for better UX)
+// Set VITE_SESSION_TIMEOUT in .env to enable (e.g., 604800000 for 7 days)
+const INACTIVITY_TIMEOUT = import.meta.env.VITE_SESSION_TIMEOUT
+  ? parseInt(import.meta.env.VITE_SESSION_TIMEOUT)
+  : 0; // 0 = disabled (users stay logged in until manual logout or token expiry)
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -54,9 +57,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     initFingerprint();
   }, [user?.id]);
 
-  // Setup inactivity logout
+  // Setup inactivity logout (only if INACTIVITY_TIMEOUT is set and > 0)
   useEffect(() => {
-    if (!user) return;
+    if (!user || INACTIVITY_TIMEOUT <= 0) return;
 
     const resetTimer = () => {
       if (inactivityTimerRef.current) {

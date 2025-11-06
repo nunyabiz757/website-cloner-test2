@@ -376,7 +376,7 @@ export const SessionStorage = {
   /**
    * Store session data
    */
-  setSession(sessionId: string, data: any, expiresIn: number = 30 * 60 * 1000): void {
+  setSession(sessionId: string, data: any, expiresIn: number = 7 * 24 * 60 * 60 * 1000): void { // Changed from 30 min to 7 days
     secureSessionStorage.setItem('session_data', { sessionId, ...data }, {
       expiresIn,
       encrypt: true,

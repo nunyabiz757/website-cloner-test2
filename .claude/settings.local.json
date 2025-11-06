@@ -44,7 +44,8 @@
       "Bash(cat:*)",
       "Bash(npx tsc:*)",
       "Bash(curl:*)",
-      "Bash(git log:*)"
+      "Bash(git log:*)",
+      "Bash([ -f \".env.example\" ])"
     ],
     "deny": [],
     "ask": []
