@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Alert } from '../components/ui/Alert';
 import { Button } from '../components/ui/Button';
+import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 import { CloneForm, CloneOptions } from '../components/clone/CloneForm';
 import { CloneProgress } from '../components/clone/CloneProgress';
 import { ClonePreview } from '../components/clone/ClonePreview';
@@ -34,6 +35,11 @@ export function Clone() {
   const [phase, setPhase] = useState<Phase>('form');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; projectId: string | null; projectName: string | null }>({
+    isOpen: false,
+    projectId: null,
+    projectName: null
+  });
 
   // Load projects on mount and set current project if available
   useEffect(() => {
@@ -312,19 +318,28 @@ export function Clone() {
     return { htmlSize, imagesCount, linksCount };
   };
 
-  const handleDeleteProject = async (projectId: string, event: React.MouseEvent) => {
+  const handleDeleteProject = (projectId: string, projectSource: string, event: React.MouseEvent) => {
     event.stopPropagation(); // Prevent card click when deleting
 
-    if (!confirm('Are you sure you want to delete this project? This action cannot be undone.')) {
-      return;
-    }
+    const projectName = new URL(projectSource).hostname.replace('www.', '');
+    setDeleteConfirm({
+      isOpen: true,
+      projectId,
+      projectName
+    });
+  };
 
-    try {
-      await deleteProject(projectId);
-      addLog(`Project deleted successfully`);
-    } catch (error) {
-      console.error('Failed to delete project:', error);
-      alert('Failed to delete project. Please try again.');
+  const confirmDelete = async () => {
+    if (deleteConfirm.projectId) {
+      try {
+        await deleteProject(deleteConfirm.projectId);
+        setDeleteConfirm({ isOpen: false, projectId: null, projectName: null });
+        console.log(`Project deleted successfully`);
+      } catch (error) {
+        console.error('Failed to delete project:', error);
+        alert('Failed to delete project. Please try again.');
+        setDeleteConfirm({ isOpen: false, projectId: null, projectName: null });
+      }
     }
   };
 
@@ -368,7 +383,7 @@ export function Clone() {
                   >
                     {/* Delete Button */}
                     <button
-                      onClick={(e) => handleDeleteProject(proj.id, e)}
+                      onClick={(e) => handleDeleteProject(proj.id, proj.source, e)}
                       className="absolute top-2 right-2 p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                       title="Delete project"
                     >
@@ -467,6 +482,18 @@ export function Clone() {
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={deleteConfirm.isOpen}
+        onClose={() => setDeleteConfirm({ isOpen: false, projectId: null, projectName: null })}
+        onConfirm={confirmDelete}
+        title="Delete Project"
+        message={`Are you sure you want to delete "${deleteConfirm.projectName}"? This action cannot be undone and all data will be permanently removed.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+      />
     </div>
   );
 }
