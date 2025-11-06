@@ -510,6 +510,7 @@ export class CloneService {
         loggingService.info('clone', `Downloaded ${allAssets.length} assets`, { projectId });
 
         console.log('startAnalysis: Step 8 - Embedding assets in HTML');
+        console.log('🔧 CODE VERSION: 2025-01-06-FIX-v2 - If you see this, new code is loaded! 🔧');
         project.progress = 70;
         project.currentStep = 'Embedding assets in HTML';
 
