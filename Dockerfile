@@ -62,6 +62,7 @@ ENV VITE_SUPABASE_URL=$VITE_SUPABASE_URL
 ENV VITE_SUPABASE_ANON_KEY=$VITE_SUPABASE_ANON_KEY
 
 # Build the application (Vite will use the ENV variables)
+# Cache bust: 2025-01-06-v3-FORCE-REBUILD
 RUN npm run build
 
 # Install Playwright browsers AFTER build
