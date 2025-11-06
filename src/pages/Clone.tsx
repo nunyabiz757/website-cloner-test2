@@ -27,7 +27,7 @@ interface CloneResult {
 
 export function Clone() {
   const navigate = useNavigate();
-  const { addProject, currentProject, projects, loadProjects } = useProjectStore();
+  const { addProject, currentProject, projects, loadProjects, deleteProject } = useProjectStore();
 
   const [selectedProject, setSelectedProject] = useState<CloneProject | null>(currentProject);
   const [showProjectSelector, setShowProjectSelector] = useState(!currentProject);
@@ -312,6 +312,22 @@ export function Clone() {
     return { htmlSize, imagesCount, linksCount };
   };
 
+  const handleDeleteProject = async (projectId: string, event: React.MouseEvent) => {
+    event.stopPropagation(); // Prevent card click when deleting
+
+    if (!confirm('Are you sure you want to delete this project? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      await deleteProject(projectId);
+      addLog(`Project deleted successfully`);
+    } catch (error) {
+      console.error('Failed to delete project:', error);
+      alert('Failed to delete project. Please try again.');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -348,9 +364,20 @@ export function Clone() {
                       setSelectedProject(proj);
                       setShowProjectSelector(false);
                     }}
-                    className="bg-gray-50 border border-gray-200 rounded-lg p-4 hover:border-blue-500 hover:shadow-md transition-all cursor-pointer"
+                    className="bg-gray-50 border border-gray-200 rounded-lg p-4 hover:border-blue-500 hover:shadow-md transition-all cursor-pointer relative"
                   >
-                    <h3 className="font-semibold text-gray-900 mb-2 truncate">{proj.source}</h3>
+                    {/* Delete Button */}
+                    <button
+                      onClick={(e) => handleDeleteProject(proj.id, e)}
+                      className="absolute top-2 right-2 p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      title="Delete project"
+                    >
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+
+                    <h3 className="font-semibold text-gray-900 mb-2 truncate pr-8">{proj.source}</h3>
                     <p className="text-sm text-gray-600 mb-3">
                       Analyzed: {new Date(proj.createdAt).toLocaleDateString()}
                     </p>
