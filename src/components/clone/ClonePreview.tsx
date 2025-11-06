@@ -29,6 +29,7 @@ export function ClonePreview({
   const [showLogs, setShowLogs] = useState(false);
   const [iframeError, setIframeError] = useState(false);
   const [iframeLoading, setIframeLoading] = useState(true);
+  const [iframeScale, setIframeScale] = useState(0.5); // Default 50% scale
 
   const formatSize = (bytes: number): string => {
     if (bytes < 1024) return `${bytes} B`;
@@ -214,7 +215,7 @@ export function ClonePreview({
 
       {/* View Mode Selector */}
       <div>
-        <div className="flex gap-2 mb-4">
+        <div className="flex items-center gap-2 mb-4">
           <button
             onClick={() => setViewMode('split')}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
@@ -245,6 +246,35 @@ export function ClonePreview({
           >
             Cloned
           </button>
+
+          {/* Zoom Controls for Cloned View */}
+          <div className="ml-auto flex items-center gap-2 border-l border-gray-300 pl-4">
+            <span className="text-sm text-gray-600">Zoom:</span>
+            <button
+              onClick={() => setIframeScale(Math.max(0.25, iframeScale - 0.1))}
+              className="px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium"
+              title="Zoom Out"
+            >
+              -
+            </button>
+            <span className="text-sm font-medium text-gray-700 min-w-[3rem] text-center">
+              {Math.round(iframeScale * 100)}%
+            </span>
+            <button
+              onClick={() => setIframeScale(Math.min(2, iframeScale + 0.1))}
+              className="px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium"
+              title="Zoom In"
+            >
+              +
+            </button>
+            <button
+              onClick={() => setIframeScale(0.5)}
+              className="px-3 py-1 rounded bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm"
+              title="Reset Zoom"
+            >
+              Reset
+            </button>
+          </div>
         </div>
 
         {/* Preview Iframes */}
@@ -266,13 +296,26 @@ export function ClonePreview({
                 <div className="bg-blue-600 px-4 py-2 text-white text-sm font-medium">
                   Cloned
                 </div>
-                <div className="h-[600px] overflow-hidden">
-                  <iframe
-                    srcDoc={clonedHtml}
-                    className="w-full h-full border-0 bg-white"
-                    title="Cloned Website"
-                    sandbox="allow-same-origin allow-scripts"
-                  />
+                <div className="h-[600px] overflow-auto bg-gray-100">
+                  <div style={{
+                    width: `${1920 * iframeScale}px`,
+                    height: `${1080 * iframeScale}px`,
+                    margin: '0 auto'
+                  }}>
+                    <iframe
+                      srcDoc={clonedHtml}
+                      className="border-0 bg-white"
+                      title="Cloned Website"
+                      sandbox="allow-same-origin allow-scripts"
+                      style={{
+                        width: '1920px',
+                        height: '1080px',
+                        transform: `scale(${iframeScale})`,
+                        transformOrigin: 'top left',
+                        border: 'none'
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -290,13 +333,26 @@ export function ClonePreview({
               <div className="bg-blue-600 px-4 py-2 text-white text-sm font-medium">
                 Cloned Website
               </div>
-              <div className="h-[600px] overflow-hidden">
-                <iframe
-                  srcDoc={clonedHtml}
-                  className="w-full h-full border-0 bg-white"
-                  title="Cloned Website"
-                  sandbox="allow-same-origin allow-scripts"
-                />
+              <div className="h-[600px] overflow-auto bg-gray-100">
+                <div style={{
+                  width: `${1920 * iframeScale}px`,
+                  height: `${1080 * iframeScale}px`,
+                  margin: '0 auto'
+                }}>
+                  <iframe
+                    srcDoc={clonedHtml}
+                    className="border-0 bg-white"
+                    title="Cloned Website"
+                    sandbox="allow-same-origin allow-scripts"
+                    style={{
+                      width: '1920px',
+                      height: '1080px',
+                      transform: `scale(${iframeScale})`,
+                      transformOrigin: 'top left',
+                      border: 'none'
+                    }}
+                  />
+                </div>
               </div>
             </div>
           )}
