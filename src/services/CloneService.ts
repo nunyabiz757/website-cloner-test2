@@ -20,7 +20,7 @@ export class CloneService {
   private userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36';
 
   async cloneWebsite(options: CloneOptions): Promise<CloneProject> {
-    console.log('🚀🚀🚀 CLONESERVICE VERSION: 2025-01-06-v8-IMPORTANT-FIX 🚀🚀🚀');
+    console.log('🚀🚀🚀 CLONESERVICE VERSION: 2025-01-06-v9-URL-NORMALIZE 🚀🚀🚀');
     console.log('CloneService.cloneWebsite called with options:', options);
 
     // Validate URL
@@ -1413,11 +1413,19 @@ export class CloneService {
 
         const src = srcMatch[1];
 
+        // Normalize URL by removing query parameters for matching
+        // URLs like "image.jpg?w=1600&h=1000" should match "image.jpg"
+        const normalizeUrl = (url: string) => url.split('?')[0];
+        const normalizedSrc = normalizeUrl(src);
+
         // Find corresponding element with computed styles
         // Railway API returns: { tag: 'img', position: { x, y, width, height }, ... }
-        const element = elementsWithStyles.find((el: any) =>
-          el.tag?.toUpperCase() === 'IMG' && el.attributes?.src === src
-        );
+        // Match by normalized URL (without query params)
+        const element = elementsWithStyles.find((el: any) => {
+          if (el.tag?.toUpperCase() !== 'IMG') return false;
+          const elSrc = el.attributes?.src || '';
+          return normalizeUrl(elSrc) === normalizedSrc || elSrc === src;
+        });
 
         if (element && element.position) {
           const { width, height } = element.position;
